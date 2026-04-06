@@ -1,0 +1,13 @@
+# Generated triage reports
+self-care-reports/*.md
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Claude Code local settings
+.claude/settings.local.json
+.claude/agent-memory

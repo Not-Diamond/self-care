@@ -1,0 +1,106 @@
+# Changelog
+
+## v0.1.0 (2026-04-06)
+### Features
+- add templates for issue reporting, feature requests, and pull requests; enhance README and CONTRIBUTING files; implement security and code of conduct guidelines
+- add marketplace.json for plugin metadata and update release script to include it
+- add README and CONTRIBUTING templates for OSS repo
+- add prepare-release.sh for OSS release pipeline
+- add content sanitization patterns for OSS release
+- add esbuild bundle script for trace-importer CLIs
+- move trace-importer sources into packages/core
+- scaffold packages/core with sme-shared sources
+- prompt for consent during init as well
+- add script for sending telemetry to posthog
+- changed target to .spec-vector/config.json
+- generate_report.sh includes source URL in report and terminal output
+- report-generator accepts optional sourceUrl field
+- run.md uses ephemeral temp file and threads source_url to report
+- add remote trace source to /self-care:run
+- add /self-care:init slash command
+- add fetch CLI to trace-importer
+- add list CLI to trace-importer
+- add validate-creds CLI to trace-importer
+- add config module to trace-importer
+- extract LangFuse client into trace-importer
+- extract LangSmith client into trace-importer
+- extract LangFuse converter into trace-importer
+- extract LangSmith converter into trace-importer
+- scaffold trace-importer package
+- Multiuser on accounts; user management
+- add PAGINATION_DEFAULTS to sme-shared constants
+- add optional gaps field to VoiceReviewSummary
+- add VoiceReviewSummary shared type
+- vaporware related changes
+- various changes for vaporware
+- sme recording
+- add correction type handling for code changes and behavioral guidance; update related components and tests
+- various changes
+- add correction target field (github_code | langsmith_prompt)
+- add CorrectionChangeset shared type
+- add LangSmith integration and observability provider icons
+- add GetStarted page for connecting GitHub repository and analyzing traces
+
+### Fixes
+- copy check-env.sh and add sanitization pattern for its path
+- update comment
+- PR feedback - no bypassing of consent, fix invalid json
+- update init.md to preserve anonymous_id during config write
+- ensure config directory exists before writing merged config
+- update analytics consent prompt message in config documentation
+- pagination fix
+- proposed fix for search pagination
+- end time langsmith
+- address feedback
+- specvector feedback.
+- specvector changes
+- init changes
+- otel validator fix and langfuse
+- guard against unknown --source in fetch.ts
+- env lookup and wrong script
+
+### Other
+- - enhance CONTRIBUTING.md with detailed sections for bug reports, feature requests, and pull requests
+- - update prepare-release.sh file permissions to executable
+- - remove sme-shared and trace-importer (merged into core)
+- - use analytics.enabled instead
+- Merge pull request #129 from Not-Diamond/d3-user-consent
+- Update packages/self-care-plugin/commands/config.md
+- Merge branch 'main' into d3-user-consent
+- Merge remote-tracking branch 'origin/main' into d3-autosync-last-synced-at
+- Merge branch 'oss' of github.com:Not-Diamond/self-care-internal into ENG-4674_oss-flow
+- - remove trace-validator.md agent
+- - plugin commands use deterministic validator CLI
+- - move trace-validator to sme-shared package
+- Update packages/trace-importer/src/cli/list.ts
+- - init.md no longer creates .self-care/traces/ directories
+- - fetch.ts outputs JSON envelope to stdout instead of writing to disk
+- - Autosync last_synced_at defaults to max trace timestamp when available
+- - User gets requested for consent on first /run call
+- - update help command with init and remote trace support
+- - migrate self-care-reports/ to .self-care/reports/
+- - update skills, add prechecks for parts of the skill that can be deteministic, convert deterministic skills to tools
+- - remove extraction-related types, routes, and components from the application
+- - remove CDM phase store and related components
+- Merge pull request #103 from Not-Diamond/ENG-4607_pagination
+- Merge remote-tracking branch 'origin/main' into d3-accounts-implementation
+- Merge main and align Langfuse integration with Drizzle/account migration
+- - Rename organizations to accounts; account to oauth_account
+- [wip] feature: langfuse support
+- - Rename workspaces to organizations
+- - Reduce IMPORT_DELAY_MS to 200 to reduce max DB connection hold time on full sync
+- chore; Create system auto sync user constant
+- Merge pull request #77 from Not-Diamond/ENG-4601_move-claude-code-related-into-separate-package
+- - addressed feedback
+- - migrate FeedbackStatus values to queued/in-review/ready-to-ship/rejected
+- Merge branch 'd3-remove-supabase' into ENG-4601_move-claude-code-related-into-separate-package
+- - moved scripts into cc plugin
+- - move CC plugin files into packages/self-care-plugin/
+- Merge branch 'main' into v2
+- - Trace validation occurs on import
+- - remove outdated documentation and improve trace handling
+- - remove unused suppressions feature
+- feat(traces): add ingest-only upload endpoint POST /api/traces/upload
+- feat(sme-shared): add origin field to Correction type
+
+
