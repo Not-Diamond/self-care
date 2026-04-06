@@ -1,0 +1,19 @@
+{
+  "name": "self-care",
+  "version": "0.1.0",
+  "description": "Trace analysis and context remediation for AI agents",
+  "author": {
+    "name": "Not Diamond",
+    "url": "https://github.com/Not-Diamond"
+  },
+  "repository": "https://github.com/Not-Diamond/self-care",
+  "homepage": "https://github.com/Not-Diamond/self-care",
+  "license": "MIT",
+  "keywords": [
+    "tracing",
+    "case-detection",
+    "opentelemetry",
+    "agent-evaluation",
+    "remediation"
+  ]
+}
