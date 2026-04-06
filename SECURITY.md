@@ -4,7 +4,7 @@
 
 **Please do not open a public issue for security vulnerabilities.**
 
-If you discover a security vulnerability in Self-Care, please report it privately by emailing [security@notdiamond.ai](mailto:security@notdiamond.ai).
+If you discover a security vulnerability in Self-Care, please report it privately by emailing [support@notdiamond.ai](mailto:support@notdiamond.ai).
 
 Include as much of the following as you can:
 
