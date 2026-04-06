@@ -1,6 +1,6 @@
 ---
-description: Main entry point — run the full pipeline (validate, analyze, report, review & apply)
-argument: "[trace-file] [details]"
+description: Main entry point — run the full pipeline (validate, analyze, report, review, summarize)
+argument: <trace-file> [details]
 allowed-tools:
   - Read
   - Grep
@@ -13,7 +13,7 @@ allowed-tools:
 
 # Triage Pipeline
 
-Run the full Self-Care triage pipeline on the provided trace file. Supports both OTEL (JSON) and Claude Code (JSONL) formats. This orchestrates 5 stages sequentially: validation, analysis, reporting, review & apply, and summary.
+Run the full Self-Care triage pipeline on the provided trace file. Supports both OTEL (JSON) and Claude Code (JSONL) formats. This orchestrates 6 stages sequentially: validation, analysis, reporting, finding review, output lists, and feedback (only if you've opted in).
 
 ## Stage 0a: Analytics Consent Check
 
@@ -136,7 +136,7 @@ Continue to Stage 1 with `trace_path` and `source_url`.
 
 **Before starting, output:**
 ```
-Stage 1/5: Validating trace...
+Stage 1/6: Validating trace...
 ```
 
 Run the same deterministic validator used by `/self-care:validate`:
@@ -165,7 +165,7 @@ Extract from the result:
 
 **Before starting, output:**
 ```
-Stage 2/5: Analyzing for cases...
+Stage 2/6: Analyzing for cases...
 ```
 
 Use the **trace-analyzer** agent to analyze the trace file at: `<trace_path>`
@@ -211,184 +211,355 @@ Or if no events found:
 
 **Before starting, output:**
 ```
-Stage 3/5: Generating report...
+Stage 3/6: Generating report...
 ```
 
-Use the **report-generator** agent to create the triage report.
+Use the **report-generator** agent to create the preliminary triage report.
 
 Provide the agent with data from previous stages:
 - **Trace metadata**: format + format-specific fields (from Stage 1)
 - **Cases**: Complete event list with details (from Stage 2)
-- **Remediation status**: "pending" (remediations have not been applied yet)
+- **Review status**: "pending" (review has not happened yet)
 - **User-provided context** (if **details** is non-empty): pass it with instruction to include an "Agent Context" section at the top of the report summarizing the intended behavior
 - **Source URL** (if `source_url` is set and not null): pass it as `"sourceUrl": "<source_url>"` so it appears in the report
 
-The agent will create a report at `./.self-care/reports/` and output a terminal summary. The report will show proposed remediations for auto-fixable events, which the user will review in Stage 4.
+The agent will create a report at `./.self-care/reports/` and output a terminal summary.
 
-**If there are no auto-fixable events, skip to the Pipeline Summary** after generating the report.
+**If there are no cases (total = 0), skip to the Pipeline Summary.**
 
 ---
 
-## Stage 4: Review & Apply
+## Stage 4: Finding Review
 
 **Before starting, output:**
 ```
-Stage 4/5: Computing proposed remediations...
-```
-(Skip this stage if no auto-fixable events exist)
-
-### 4a. Compute Diffs
-
-Use the **context-refiner** agent in **preview mode** to compute exact diffs for auto-fixable events.
-
-Provide the agent with:
-- `mode: "preview"`
-- The auto-fixable events from Stage 2
-- The trace file path: `<trace_path>`
-- **User-provided context** (if **details** is non-empty): pass it to help the agent propose fixes that align with the agent's intended behavior
-
-The agent will discover relevant files, read them, and return a JSON block with `proposed_diffs` containing the exact `file_path`, `old_string`, and `new_string` for each fix.
-
-**After diffs are computed, output:**
-```
-✓ Computed <N> proposed diffs
+Stage 4/6: Reviewing findings...
 ```
 
-### 4b. Present Diffs for Review
+### 4a. Offer to Skip Review
 
-**IMPORTANT: You MUST ask the user about EVERY diff individually. Do not skip any diffs or assume the user's answer for one diff applies to others.**
+Before iterating through findings, use **AskUserQuestion** to give the developer a choice:
 
-Iterate through ALL proposed diffs, one at a time, sorted by severity (high → medium → low). For EACH diff, use **AskUserQuestion** to present the diff and collect the user's decision.
+- **question**:
+  ```
+  Found <total> findings (<high> high, <medium> medium, <low> low).
 
-**CRITICAL formatting rule: Do NOT use triple-backtick code fences (```) anywhere in the AskUserQuestion question text.** Claude Code's AskUserQuestion renders backticks as literal characters, making diffs unreadable. Instead use Unicode box-drawing characters for visual structure.
+  Would you like to review each finding individually?
+  Reviewing helps build intuition about agent failure modes and improves future detection accuracy.
+  ```
+- **header**: "Finding Review"
+- **options**:
+  - `{ "label": "Review findings", "description": "Walk through each finding one by one" }`
+  - `{ "label": "Skip review", "description": "Go straight to the categorized results" }`
 
-For EACH diff:
+If the developer selects **Skip review** → jump directly to Stage 5. All cases retain their original `classification` from analysis. No false positives are recorded. Set `review_skipped = true`.
+
+### 4b. Iterate Through Findings
+
+**IMPORTANT: You MUST ask the user about EVERY finding individually. Do not skip any findings or assume the user's answer for one finding applies to others.**
+
+Iterate through ALL cases, sorted by severity (high → medium → low). For EACH finding, use **AskUserQuestion** to present it and collect the user's decision.
+
+**CRITICAL formatting rule: Do NOT use triple-backtick code fences (```) anywhere in the AskUserQuestion question text.** Claude Code's AskUserQuestion renders backticks as literal characters, making content unreadable. Instead use Unicode box-drawing characters for visual structure.
+
+For EACH finding:
 
 1. Use **AskUserQuestion** with:
-   - **question**: (plain text, NO code fences — use `│` for code lines)
+   - **question**: (plain text, NO code fences)
      ```
-     Fix <N>/<total>: [<event_type>] (<severity>)
-
-     ★ Rationale
-     <context.rationale>
+     Finding <N>/<total>: [<type>] (<severity>)
      ─────────────────────────────────────────────────────────
 
-     <event_description>
+     <description>
 
-     File: <file_path>
-     Section: <context.file_section>
-
-     ┌─ Current ─────────────────────────────────────────────
-     │ <old_line_1>
-     │ <old_line_2>
-     │ <old_line_3>
-     └───────────────────────────────────────────────────────
-
-     ┌─ Proposed ────────────────────────────────────────────
-     │ <new_line_1>
-     │ <new_line_2>
-     │ <new_line_3>
-     └───────────────────────────────────────────────────────
+     Evidence: <evidence>
+     ─────────────────────────────────────────────────────────
+     Is this finding relevant?
      ```
 
-   - **header**: "<event_type>"
+   - **header**: "<type>"
    - **options**:
-     - `{ "label": "Apply", "description": "Apply this change" }`
-     - `{ "label": "Skip", "description": "Do not apply" }`
+     - `{ "label": "Relevant", "description": "True positive — confirmed finding" }`
+     - `{ "label": "Irrelevant", "description": "False positive — not applicable" }`
+     - `{ "label": "Skip", "description": "Skip without judgment" }`
 
 2. Wait for the user's response.
 
 3. Record the result:
-   - **"Apply"**: Add to `approved_diffs`. Output: `✓ Queued for apply`
-   - **"Skip"**: Add to `skipped_diffs`. Output: `○ Skipped`
-   - **Free-text response**: Record as feedback alongside the skip.
+   - **"Relevant"**: Add to `true_positives[]` (with the full case data including `classification`). Output: `✓ Marked as true positive`
+   - **"Irrelevant"**: Add to `false_positives[]` (with any free-text notes as `developerNote`). Output: `✗ Marked as false positive`
+   - **"Skip"**: Add to `skipped[]`. Output: `○ Skipped`
+   - **Free-text response**: Record as notes attached to a "Skip" decision.
 
-4. **Continue to the next diff** — repeat steps 1-3 until ALL diffs have been presented.
+4. **Continue to the next finding** — repeat steps 1-3 until ALL findings have been presented.
 
-**Diff display rules (within AskUserQuestion):**
-- Every line of code MUST be prefixed with `│ ` (box-drawing vertical bar + space)
-- For **changed lines**: use `│ - ` prefix in Current block, `│ + ` prefix in Proposed block
-- For **unchanged context lines**: use plain `│ ` prefix
-- For **insertions** (empty `old_string`): omit Current block, show only Proposed with header `┌─ New content ──...`
-- For **deletions** (empty `new_string`): omit Proposed block, show only Current with header `┌─ Removed ──...`
-- Show complete content if 15 lines or fewer
-- For longer content: first 8 lines + `│ ... (<N> more lines)` + last 3 lines
-
-After ALL diffs have been reviewed, categorize results:
-- **approved_diffs**: Diffs where user selected "Apply"
-- **skipped_diffs**: Diffs where user selected "Skip" (with feedback if provided)
-- **skipped_events**: Events where no diff could be computed
-- **escalations**: Manual-review events (not presented to user)
-
-**After ALL diffs reviewed, output:**
+**After ALL findings reviewed, output:**
 ```
-✓ Review complete (<approved_count> to apply, <skipped_count> skipped, <escalated_count> escalated)
+✓ Review complete (<tp_count> true positives, <fp_count> false positives, <skipped_count> skipped)
 ```
 
 ---
 
-## Stage 5: Apply & Summary
+## Stage 5: Output Lists + Updated Report
 
 **Before starting, output:**
 ```
-Stage 5/5: Applying <approved_count> approved fixes...
-```
-(Skip to summary if no diffs were approved)
-
-### 5a. Apply Approved Diffs
-
-For each diff in **approved_diffs**, apply it using the **Edit** tool:
-- `file_path`: from the diff
-- `old_string`: from the diff
-- `new_string`: from the diff
-
-Track success/failure for each edit.
-
-### 5b. Output Summary
-
-**Before starting, output:**
-```
-Stage 5/5: Summary
+Stage 5/6: Generating results...
 ```
 
-For each event processed, output a line using these icons:
-- `✓` for successfully applied fixes
-- `✗` for failed fixes (Edit tool error)
-- `○` for skipped fixes (user denied, with reason if provided)
-- `⊘` for skipped events (no diff could be computed)
-- `⚑` for escalated events (manual-review)
+### 5a. Classify Into Two Lists
+
+Classification uses the `classification` field from the analyzer output (auto-fixable vs manual-review), applied only to cases that made it through review.
+
+**If the developer reviewed findings (Stage 4b):**
+- **Auto-Remediable** = cases from `true_positives[]` AND `skipped[]` where `classification == "auto-fixable"`
+- **Needs More Context** = cases from `true_positives[]` AND `skipped[]` where `classification == "manual-review"`
+- False positives are excluded from both reports (tracked only in the outcome sidecar)
+- Set `reviewStatus = "complete"`
+
+**If the developer skipped review (Stage 4a):**
+- **Auto-Remediable** = all cases with `classification: "auto-fixable"` from analysis
+- **Needs More Context** = all cases with `classification: "manual-review"` from analysis
+- **False Positives** = empty
+- Set `reviewStatus = "skipped"`
+
+### 5b. Write Two Categorized Reports
+
+Write two separate markdown report files to `./.self-care/reports/`. Use `<date>` (today, YYYY-MM-DD) and `<short_id>` (first 8 chars of trace_id or session_id) for filenames.
+
+Each report includes trace metadata so it stands alone as a complete document.
+
+**Auto-Remediable Report** — `./.self-care/reports/<date>-<short_id>-auto-remediable.md`
+
+Use the **Write** tool to create this file. Only write this file if there are auto-remediable cases (skip if the list is empty).
+
+```markdown
+---
+report_type: auto-remediable
+<format-specific metadata fields from Stage 1>
+timestamp: <ISO timestamp>
+case_count: <count>
+severity_breakdown:
+  high: <count>
+  medium: <count>
+  low: <count>
+---
+
+# Auto-Remediable Cases
+
+These findings can be addressed with targeted codebase changes.
+
+## Trace Summary
+
+<same trace summary as the triage report — format, IDs, span/message count, time range>
+
+## Cases
+
+### Case 1: <type> (<severity>)
+
+**Description**: <description>
+**Evidence**: <evidence>
+**Proposed Fix**: <proposedFix>
+
+---
+
+### Case 2: <type> (<severity>)
+
+...
+```
+
+**Manual-Review Report** — `./.self-care/reports/<date>-<short_id>-manual-review.md`
+
+Use the **Write** tool to create this file. Only write this file if there are needs-more-context cases (skip if the list is empty).
+
+```markdown
+---
+report_type: manual-review
+<format-specific metadata fields from Stage 1>
+timestamp: <ISO timestamp>
+case_count: <count>
+severity_breakdown:
+  high: <count>
+  medium: <count>
+  low: <count>
+---
+
+# Cases Requiring More Context
+
+These findings need further investigation or domain expertise.
+
+## Trace Summary
+
+<same trace summary as the triage report — format, IDs, span/message count, time range>
+
+## Cases
+
+### Case 1: <type> (<severity>)
+
+**Description**: <description>
+**Evidence**: <evidence>
+**Recommendation**: <proposedFix>
+
+---
+
+### Case 2: <type> (<severity>)
+
+...
+```
+
+**Format-specific metadata fields** for YAML frontmatter:
+- OTEL: `format: otel`, `trace_id`, `service_name`, `span_count`
+- Claude Code: `format: claude-code`, `session_id`, `message_count`
+
+### 5c. Display Two Lists in Terminal
+
+After writing the reports, output the categorized results with case details:
 
 ```
-  ✓ Event 1: <drift-type> (<severity>) — <file_path>: <brief change description>
-  ✓ Event 2: <drift-type> (<severity>) — <file_path>: <brief change description>
-  ○ Event 3: <drift-type> (<severity>) — Skipped by user
-  ⚑ Event 4: <drift-type> (<severity>) — Escalated: <reason>
-  ✓ Event 5: <drift-type> (<severity>) — <file_path>: <brief change description>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Auto-Remediable Cases (<count>)
+These findings can be addressed with targeted codebase changes.
+
+  1. [<type>] (<severity>) — <description>
+     Fix: <proposedFix first line>
+  2. [<type>] (<severity>) — <description>
+     Fix: <proposedFix first line>
+
+  Report: <auto_remediable_path>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Cases Requiring More Context (<count>)
+These findings need further investigation or domain expertise.
+
+  1. [<type>] (<severity>) — <description>
+     Reason: <proposedFix>
+  2. [<type>] (<severity>) — <description>
+     Reason: <proposedFix>
+
+  Report: <manual_review_path>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
+
+If either list is empty, output `  (none)` under the heading and omit the Report line for that list.
+
+### 5d. Regenerate Triage Report With Review Outcomes
+
+Call the **report-generator** agent again with:
+- **Trace metadata**: same as Stage 3
+- **Cases**: same full case list from Stage 2
+- **Review status**: `reviewStatus` ("complete" or "skipped")
+- **Review outcomes**: the categorized lists:
+  - `autoRemediable[]` — cases with type, severity, description, proposedFix
+  - `needsMoreContext[]` — cases with type, severity, description, proposedFix
+  - `falsePositives[]` — cases with type, severity, description, developerNote
+  - `skipped[]` — cases with type, severity, description
+- **User-provided context** (if **details** is non-empty)
+
+The agent will overwrite the triage report file with the final version including review outcomes.
+
+### 5e. Write Outcome Sidecar
+
+**Only if review was done and true or false positives exist.** Use the **Write** tool to save a JSON file at `./.self-care/reports/<date>-<short_id>-outcome.json` where `<date>` is today's date (YYYY-MM-DD) and `<short_id>` is the first 8 characters of trace_id (OTEL) or session_id (Claude Code):
+
+```json
+{
+  "trace_id": "<id>",
+  "timestamp": "<ISO timestamp>",
+  "true_positives": [
+    {
+      "type": "<case type>",
+      "severity": "<severity>",
+      "description": "<description>",
+      "developerNote": "<free text if provided, else null>"
+    }
+  ],
+  "false_positives": [
+    {
+      "type": "<case type>",
+      "severity": "<severity>",
+      "description": "<description>",
+      "developerNote": "<free text if provided, else null>"
+    }
+  ]
+}
+```
+
+---
+
+## Stage 6: Feedback
+
+**Guard: Only prompt if analytics is enabled.** Use Bash to check if `.self-care/config.json` exists and analytics is enabled:
+
+```
+cat .self-care/config.json 2>/dev/null | jq -r '.analytics.enabled // false'
+```
+
+If the result is not `"true"`, skip this stage entirely.
+
+If opted in, use **AskUserQuestion**:
+- **question**: `Would you recommend this tool to others?`
+- **header**: "Feedback"
+- **options**:
+  - `{ "label": "Yes", "description": "I would recommend Self-Care" }`
+  - `{ "label": "No", "description": "I would not recommend Self-Care" }`
+
+Free-text responses are captured as additional notes.
+
+After the user responds, send feedback via telemetry:
+
+```
+bash agents/skills/scripts/telemetry.sh sc_feedback_run '<json>'
+```
+
+Where `<json>` is:
+```json
+{
+  "trace_format": "<format>",
+  "total_cases": <N>,
+  "true_positive_auto_fixable": <N>,
+  "true_positive_manual_review": <N>,
+  "false_positives": <N>,
+  "skipped": <N>,
+  "recommendation": "yes|no",
+  "notes": "<free-text if provided, else null>"
+}
+```
+
+Output: `Thank you for your feedback.`
 
 ---
 
 ## Pipeline Summary
 
-After Stage 5 completes (or Stage 3 if no auto-fixable events), display the final pipeline summary to the user using this exact format:
+After Stage 5 completes (or Stage 3 if no cases), display the final pipeline summary. The summary is shown **before** Stage 6 (Feedback).
 
-**For OTEL traces:**
+**If findings were reviewed:**
+
+For OTEL traces:
 ```
 Self-Care Complete
 
 Trace: <service_name> (<trace_id>)
 Source: <source_url>
 Cases found: <total>
-  Applied: <applied_count>
-  Skipped by user: <skipped_count>
-  Escalated: <escalated_count>
+  Auto-remediable:       <auto_remediable_count>
+  Needs more context:    <needs_context_count>
+  True positives:       <tp_count>
+  False positives:       <fp_count>
+  Skipped:               <skipped_count>
 
-Report saved to: <report_path>
+Reports:
+  Triage:           <triage_report_path>
+  Auto-remediable:  <auto_remediable_path or "(none)">
+  Manual-review:    <manual_review_path or "(none)">
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 What's Next
-• Review the report: <report_path>
+• Review the reports in ./.self-care/reports/
 • Disagree with findings? Tell me what was incorrect and I'll re-analyze
 • Analyze another trace: /self-care:run <trace-file>
 ```
@@ -403,19 +574,11 @@ Session: <session_id>
 Source: <source_url>
 Messages: <message_count>
 Cases found: <total>
-  Applied: <applied_count>
-  Skipped by user: <skipped_count>
-  Escalated: <escalated_count>
-
-Report saved to: <report_path>
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-What's Next
-• Review the report: <report_path>
-• Disagree with findings? Tell me what was incorrect and I'll re-analyze
-• Analyze another trace: /self-care:run <trace-file>
 ```
+
+**If review was skipped:**
+
+Same as above but omit the "False positives" and "Skipped" lines.
 
 Omit the "Source:" line if source_url is not set or is null.
 
@@ -433,8 +596,7 @@ When the user provides ANY feedback about the analysis:
    - The user's feedback as additional context to guide re-analysis
    - The original **details** (if non-empty), so agent context is preserved across re-analysis
 3. **Output updated JSON** with the revised findings
-4. **Re-run Stage 3 (Reporting)** to regenerate the report with the updated findings
-5. **Re-run Stage 4 (Approval & Remediation)** only if the updated findings include auto-fixable events
+4. **Re-run Stages 3 → 4 → 5** with the updated findings
 
 After re-analysis, output the updated JSON analysis block with the standard format:
 

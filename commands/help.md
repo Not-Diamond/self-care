@@ -55,14 +55,29 @@ COMMANDS
     If no file is provided, connects to the configured trace source
     (from /self-care:init) and presents an interactive trace picker.
 
-    Orchestrates 5 sequential stages:
+    Orchestrates 6 sequential stages:
       1. Validation       — Verify trace format (OTEL or Claude Code)
       2. Analysis         — Detect cases using skill agents
       3. Reporting        — Generate triage report
-      4. Review & Apply   — Show proposed fixes for user approval
-      5. Summary          — Display applied changes
+      4. Finding Review   — Review each finding for relevance
+      5. Output Lists     — Auto-remediable cases + cases needing context
+      6. Feedback         — Optional anonymous feedback
 
     Supports both OTEL (JSON) and Claude Code (JSONL) formats.
+
+
+  /self-care:review [count]
+    Review unreviewed reports from previous runs.
+
+    Finds reports with pending review status in .self-care/reports/
+    and walks through each finding for relevance classification.
+    Produces two categorized reports (auto-remediable + manual-review).
+    Optionally specify a count to limit how many reports to review
+    (newest first).
+
+    Examples:
+      /self-care:review        — Review all pending reports
+      /self-care:review 3      — Review the 3 most recent pending reports
 
 
   /self-care:autosync-enable
@@ -146,10 +161,13 @@ QUICK START
   4. Analyze a specific file:
      /self-care:run ./trace.json
 
-  5. Check autosync status:
+  5. Review pending reports:
+     /self-care:review
+
+  6. Check autosync status:
      /self-care:autosync-status
 
-  6. Validate trace format:
+  7. Validate trace format:
      /self-care:validate ./trace.json
 
 

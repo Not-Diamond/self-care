@@ -15,11 +15,12 @@
 #     "description": string, "evidence": string,
 #     "classification": "auto-fixable"|"manual-review", "proposedFix": string
 #   }],
-#   "remediationStatus": "pending" | "complete",
-#   "remediationOutcomes": {           // only if complete
-#     "applied":  [{ "eventN": int, "type": string, "severity": string, "file": string, "summary": string, "diff": string }],
-#     "skipped":  [{ "eventN": int, "type": string, "severity": string, "proposedFix": string }],
-#     "failed":   [{ "eventN": int, "type": string, "severity": string, "file": string, "reason": string }]
+#   "reviewStatus": "pending" | "complete" | "skipped",
+#   "reviewOutcomes": {                  // only if complete or skipped
+#     "autoRemediable":   [{ "type": string, "severity": string, "description": string, "proposedFix": string }],
+#     "needsMoreContext":  [{ "type": string, "severity": string, "description": string, "proposedFix": string }],
+#     "falsePositives":    [{ "type": string, "severity": string, "description": string, "developerNote": string|null }],
+#     "skipped":           [{ "type": string, "severity": string, "description": string }]
 #   },
 #   "agentContext": string,              // optional — user-provided agent behavior summary
 #   "sourceUrl": string | null,          // optional — link to trace in LangSmith/LangFuse
@@ -45,8 +46,8 @@ input=$(cat "$input_file")
 
 # --- Parse top-level fields ---
 format=$(echo "$input" | jq -r '.format')
-remediation_status=$(echo "$input" | jq -r '.remediationStatus')
 source_url=$(echo "$input" | jq -r '.sourceUrl // empty')
+review_status=$(echo "$input" | jq -r '.reviewStatus')
 timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 today=$(date -u +"%Y-%m-%d")
 
@@ -58,6 +59,7 @@ else
 fi
 short_id="${id:0:8}"
 output_file="./.self-care/reports/${today}-${short_id}-triage.md"
+data_file="./.self-care/reports/${today}-${short_id}-data.json"
 mkdir -p ./.self-care/reports
 
 # --- Counts ---
@@ -68,12 +70,16 @@ high_count=$(echo "$input" | jq '[.cases[] | select(.severity == "high")] | leng
 medium_count=$(echo "$input" | jq '[.cases[] | select(.severity == "medium")] | length')
 low_count=$(echo "$input" | jq '[.cases[] | select(.severity == "low")] | length')
 
-if [ "$remediation_status" = "complete" ]; then
-  remediated_count=$(echo "$input" | jq '(.remediationOutcomes.applied // []) | length')
-  skipped_count=$(echo "$input" | jq '(.remediationOutcomes.skipped // []) | length')
+if [ "$review_status" = "complete" ] || [ "$review_status" = "skipped" ]; then
+  auto_remediable_reviewed=$(echo "$input" | jq '(.reviewOutcomes.autoRemediable // []) | length')
+  needs_context_count=$(echo "$input" | jq '(.reviewOutcomes.needsMoreContext // []) | length')
+  false_positive_count=$(echo "$input" | jq '(.reviewOutcomes.falsePositives // []) | length')
+  skipped_review_count=$(echo "$input" | jq '(.reviewOutcomes.skipped // []) | length')
 else
-  remediated_count=0
-  skipped_count=0
+  auto_remediable_reviewed=0
+  needs_context_count=0
+  false_positive_count=0
+  skipped_review_count=0
 fi
 
 # --- Build report ---
@@ -97,11 +103,11 @@ fi
     echo "source_url: \"$source_url\""
   fi
   echo "total_cases: $total_cases"
-  echo "remediation_status: $remediation_status"
-  echo "auto_fixable_count: $auto_fixable_count"
-  echo "remediated_count: $remediated_count"
-  echo "skipped_count: $skipped_count"
-  echo "escalated_count: $escalated_count"
+  echo "review_status: $review_status"
+  echo "auto_remediable_count: $auto_remediable_reviewed"
+  echo "needs_context_count: $needs_context_count"
+  echo "false_positive_count: $false_positive_count"
+  echo "skipped_review_count: $skipped_review_count"
   echo "severity_breakdown:"
   echo "  high: $high_count"
   echo "  medium: $medium_count"
@@ -169,11 +175,78 @@ fi
     echo ""
   done
 
-  # Remediations
-  if [ "$remediation_status" = "pending" ]; then
-    echo "## Proposed Remediations"
+  # Review Outcomes (only when review is complete or skipped)
+  if [ "$review_status" = "complete" ] || [ "$review_status" = "skipped" ]; then
+    echo "## Auto-Remediable Cases"
     echo ""
-    echo "The following auto-fixable events are pending user review:"
+    if [ "$auto_remediable_reviewed" -eq 0 ]; then
+      echo "No auto-remediable cases."
+    else
+      echo "These findings can be addressed with targeted codebase changes."
+      echo ""
+      echo "$input" | jq -c '(.reviewOutcomes.autoRemediable // []) | to_entries[]' | while IFS= read -r entry; do
+        n=$(echo "$entry" | jq -r '.key + 1')
+        item=$(echo "$entry" | jq -r '.value')
+        type=$(echo "$item" | jq -r '.type')
+        severity=$(echo "$item" | jq -r '.severity')
+        description=$(echo "$item" | jq -r '.description')
+        proposed_fix=$(echo "$item" | jq -r '.proposedFix')
+        echo "### Case $n: $type ($severity)"
+        echo ""
+        echo "**Description**: $description"
+        echo "**Proposed Fix**: $proposed_fix"
+        echo ""
+        echo "---"
+        echo ""
+      done
+    fi
+
+    echo "## Cases Requiring More Context"
+    echo ""
+    if [ "$needs_context_count" -eq 0 ]; then
+      echo "No cases requiring more context."
+    else
+      echo "These findings need further investigation or domain expertise."
+      echo ""
+      echo "$input" | jq -c '(.reviewOutcomes.needsMoreContext // []) | to_entries[]' | while IFS= read -r entry; do
+        n=$(echo "$entry" | jq -r '.key + 1')
+        item=$(echo "$entry" | jq -r '.value')
+        type=$(echo "$item" | jq -r '.type')
+        severity=$(echo "$item" | jq -r '.severity')
+        description=$(echo "$item" | jq -r '.description')
+        proposed_fix=$(echo "$item" | jq -r '.proposedFix')
+        echo "### Case $n: $type ($severity)"
+        echo ""
+        echo "**Description**: $description"
+        echo "**Recommendation**: $proposed_fix"
+        echo ""
+        echo "---"
+        echo ""
+      done
+    fi
+
+    echo "## False Positives"
+    echo ""
+    if [ "$false_positive_count" -eq 0 ]; then
+      echo "No false positives reported."
+    else
+      echo "$input" | jq -c '(.reviewOutcomes.falsePositives // []) | to_entries[]' | while IFS= read -r entry; do
+        n=$(echo "$entry" | jq -r '.key + 1')
+        item=$(echo "$entry" | jq -r '.value')
+        type=$(echo "$item" | jq -r '.type')
+        severity=$(echo "$item" | jq -r '.severity')
+        description=$(echo "$item" | jq -r '.description')
+        note=$(echo "$item" | jq -r '.developerNote // "N/A"')
+        echo "- **$type** ($severity): $description"
+        if [ "$note" != "null" ] && [ "$note" != "N/A" ]; then
+          echo "  - Developer note: $note"
+        fi
+      done
+    fi
+    echo ""
+  else
+    # Pending review — show cases by classification
+    echo "## Auto-Fixable Cases (Pending Review)"
     echo ""
     echo "$input" | jq -c '.cases | to_entries[] | select(.value.classification == "auto-fixable")' | while IFS= read -r entry; do
       n=$(echo "$entry" | jq -r '.key + 1')
@@ -185,76 +258,23 @@ fi
       echo "**Proposed Fix**: $proposed_fix"
       echo ""
     done
-  else
-    echo "## Remediation Outcomes"
-    echo ""
-    echo "### Applied Fixes"
-    echo ""
-    echo "$input" | jq -c '(.remediationOutcomes.applied // [])[]' | while IFS= read -r item; do
-      n=$(echo "$item" | jq -r '.eventN')
-      type=$(echo "$item" | jq -r '.type')
-      severity=$(echo "$item" | jq -r '.severity')
-      file=$(echo "$item" | jq -r '.file // "N/A"')
-      summary=$(echo "$item" | jq -r '.summary')
-      diff=$(echo "$item" | jq -r '.diff // ""')
-      echo "- **Event $n** ($type, $severity): $summary"
-      echo "  - File: $file"
-      if [ -n "$diff" ]; then
-        echo "  - Change:"
-        echo '    ```diff'
-        echo "$diff" | sed 's/^/    /'
-        echo '    ```'
-      fi
-    done
-    echo ""
 
-    echo "### Skipped Fixes"
+    echo "## Manual-Review Cases (Pending Review)"
     echo ""
-    echo "$input" | jq -c '(.remediationOutcomes.skipped // [])[]' | while IFS= read -r item; do
-      n=$(echo "$item" | jq -r '.eventN')
-      type=$(echo "$item" | jq -r '.type')
-      severity=$(echo "$item" | jq -r '.severity')
-      proposed_fix=$(echo "$item" | jq -r '.proposedFix')
-      echo "- **Event $n** ($type, $severity): $proposed_fix"
-    done
-    echo ""
-
-    echo "### Failed Fixes"
-    echo ""
-    echo "$input" | jq -c '(.remediationOutcomes.failed // [])[]' | while IFS= read -r item; do
-      n=$(echo "$item" | jq -r '.eventN')
-      type=$(echo "$item" | jq -r '.type')
-      severity=$(echo "$item" | jq -r '.severity')
-      file=$(echo "$item" | jq -r '.file // "N/A"')
-      reason=$(echo "$item" | jq -r '.reason')
-      echo "- **Event $n** ($type, $severity): $reason"
-      echo "  - File: $file"
-    done
-    echo ""
-  fi
-
-  # Escalations
-  echo "## Escalations"
-  echo ""
-  if [ "$escalated_count" -eq 0 ]; then
-    echo "No escalations."
-  else
-    echo "$input" | jq -c '[.cases[] | select(.classification == "manual-review")] | to_entries[]' | while IFS= read -r entry; do
+    echo "$input" | jq -c '.cases | to_entries[] | select(.value.classification == "manual-review")' | while IFS= read -r entry; do
       n=$(echo "$entry" | jq -r '.key + 1')
       case_obj=$(echo "$entry" | jq -r '.value')
       type=$(echo "$case_obj" | jq -r '.type')
       severity=$(echo "$case_obj" | jq -r '.severity')
       description=$(echo "$case_obj" | jq -r '.description')
       proposed_fix=$(echo "$case_obj" | jq -r '.proposedFix')
-      echo "### Escalation $n: $type ($severity)"
+      echo "### Event $n: $type ($severity)"
       echo ""
       echo "**Description**: $description"
-      echo "**Reason**: Manual review required"
       echo "**Recommendation**: $proposed_fix"
       echo ""
     done
   fi
-  echo ""
 
   # Recommendations
   echo "## Recommendations"
@@ -271,6 +291,9 @@ fi
 
 } > "$output_file"
 
+# --- Save JSON data sidecar (for self-care:review) ---
+cp "$input_file" "$data_file"
+
 # --- Terminal summary ---
 if [ "$format" = "otel" ]; then
   service=$(echo "$input" | jq -r '.metadata.service_name')
@@ -284,12 +307,19 @@ if [ -n "$source_url" ]; then
   echo "Source: $source_url"
 fi
 
-if [ "$remediation_status" = "pending" ]; then
-  echo "Cases: $total_cases ($auto_fixable_count auto-fixable, $escalated_count manual-review)"
-  echo "Status: Pending user approval"
-else
+if [ "$review_status" = "complete" ]; then
   echo "Cases: $total_cases"
-  echo "Summary: $remediated_count applied, $skipped_count skipped, $escalated_count escalated"
+  echo "  Auto-remediable: $auto_remediable_reviewed"
+  echo "  Needs more context: $needs_context_count"
+  echo "  False positives: $false_positive_count"
+  echo "  Skipped: $skipped_review_count"
+elif [ "$review_status" = "skipped" ]; then
+  echo "Cases: $total_cases"
+  echo "  Auto-remediable: $auto_remediable_reviewed"
+  echo "  Needs more context: $needs_context_count"
+else
+  echo "Cases: $total_cases ($auto_fixable_count auto-fixable, $escalated_count manual-review)"
+  echo "Status: Pending review"
 fi
 
 echo "Report saved to: $output_file"

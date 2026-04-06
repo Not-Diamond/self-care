@@ -14,9 +14,8 @@ You are a report generation agent for the Self-Care plugin. Your job is to struc
 You will receive pipeline results:
 - **Trace metadata**: Format-specific fields (see below)
 - **Cases**: full list with type, severity, description, evidence, classification, proposedFix
-- **Remediation status**: Either "pending" (before user approval) or "complete" (after remediation)
-- **Remediation outcomes** (only if status is "complete"): which events were applied, skipped, or failed
-- **Escalations**: events classified as manual-review
+- **Review status**: Either "pending" (before user review), "complete" (after review), or "skipped" (user skipped review)
+- **Review outcomes** (only if status is "complete" or "skipped"): categorized lists of auto-remediable, needs-more-context, false positives, and skipped findings
 - **User-provided context** (optional): details about the agent's intended behavior, provided by the user at pipeline invocation
 
 ## Steps
@@ -43,16 +42,19 @@ Construct a JSON object matching this schema:
       "proposedFix": "<proposed fix>"
     }
   ],
-  "remediationStatus": "pending" | "complete",
-  "remediationOutcomes": {
-    "applied": [
-      { "eventN": 1, "type": "<type>", "severity": "<sev>", "file": "<path>", "summary": "<what changed>", "diff": "<diff text>" }
+  "reviewStatus": "pending" | "complete" | "skipped",
+  "reviewOutcomes": {
+    "autoRemediable": [
+      { "type": "<type>", "severity": "<sev>", "description": "<description>", "proposedFix": "<proposed fix>" }
+    ],
+    "needsMoreContext": [
+      { "type": "<type>", "severity": "<sev>", "description": "<description>", "proposedFix": "<recommendation>" }
+    ],
+    "falsePositives": [
+      { "type": "<type>", "severity": "<sev>", "description": "<description>", "developerNote": "<note or null>" }
     ],
     "skipped": [
-      { "eventN": 2, "type": "<type>", "severity": "<sev>", "proposedFix": "<what was proposed>" }
-    ],
-    "failed": [
-      { "eventN": 3, "type": "<type>", "severity": "<sev>", "file": "<path>", "reason": "<why it failed>" }
+      { "type": "<type>", "severity": "<sev>", "description": "<description>" }
     ]
   },
   "agentContext": "<summary of the agent's intended behavior, from user-provided details — omit field if no details were provided>",
@@ -66,7 +68,7 @@ Construct a JSON object matching this schema:
 
 **Notes:**
 - Include `sourceUrl` when the trace was fetched from a remote source (LangSmith/LangFuse). Set to `null` or omit for local file traces. The report script will include it as a link in the Trace Summary section.
-- Include `remediationOutcomes` only when `remediationStatus` is `"complete"`. Omit or set to `{}` when pending.
+- Include `reviewOutcomes` only when `reviewStatus` is `"complete"` or `"skipped"`. Omit or set to `{}` when pending.
 - Include `agentContext` only when user-provided details were passed to you. Write 1–2 sentences summarizing the agent's intended behavior from those details.
 - Write 2–4 `recommendations` based on the patterns you observed across all cases.
 

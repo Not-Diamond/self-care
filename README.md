@@ -78,13 +78,56 @@ may conflict with retrieved documents.
 
 Auto-fixable cases can be applied directly. Manual-review cases are escalated for human judgment.
 
+## Auto-Remediation
+
+After running the pipeline, Self-Care can automatically fix auto-remediable cases by editing your project files — system prompts, tool descriptions, and context documents.
+
+The remediation flow is two-phase:
+
+1. **Preview** — Self-Care scans your codebase, locates the relevant files, and computes exact diffs for each auto-fixable case. You review the proposed changes before anything is modified.
+2. **Apply** — Once you approve, the diffs are applied to your files.
+
+After `/self-care:run` completes, the auto-remediable report (`.self-care/reports/<date>-<id>-auto-remediable.md`) contains each case with its proposed fix. The context-refiner agent reads these cases, finds the right files in your project, and generates minimal, targeted edits.
+
+Example remediation for a **grounding** case:
+
+```diff
+# In prompts/agent.md
+- You can process refunds within 30 days of purchase.
++ Retrieve the current return policy before quoting any deadlines.
++ Do not state specific timeframes unless confirmed by a retrieved document.
+```
+
+Remediation targets the root cause in your agent's configuration — not the trace itself.
+
+## Continuous Monitoring
+
+Self-Care can automatically poll your trace source and analyze new traces on a schedule using Claude Code's scheduled tasks:
+
+```bash
+/self-care:autosync-enable     # Set up recurring analysis
+```
+
+You'll be asked to choose a polling interval (e.g. every 10 minutes) and a sampling rate (e.g. 5% of new traces). Self-Care then runs in the background — fetching, analyzing, and generating reports without manual intervention.
+
+```bash
+/self-care:autosync-status     # Check current monitoring state
+/self-care:autosync-disable    # Stop background monitoring
+```
+
+Reports from autosync are saved to `.self-care/reports/` just like manual runs, and a notification signal is written when new cases are found.
+
 ## Commands
 
 | Command | Description |
 |---------|-------------|
 | `/self-care:run` | Fetch and analyze traces, generate report |
 | `/self-care:validate <file>` | Validate trace file format (OTEL or Claude Code) |
+| `/self-care:review [count]` | Review unreviewed reports and categorize findings |
 | `/self-care:init` | Configure trace source (LangSmith or LangFuse) |
+| `/self-care:autosync-enable` | Enable background monitoring on a schedule |
+| `/self-care:autosync-disable` | Stop background monitoring |
+| `/self-care:autosync-status` | Show current autosync state |
 | `/self-care:config` | View or update configuration |
 | `/self-care:help` | Show help and usage information |
 
