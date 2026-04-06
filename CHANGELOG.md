@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.0.3 (2026-04-06)
+Initial release.
+
 ## v0.0.2 (2026-04-06)
 ### Features
 - add auto-remediation section to README with detailed workflow and examples
