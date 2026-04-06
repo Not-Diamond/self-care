@@ -1,5 +1,4 @@
 {
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "self-care",
   "version": "1.0.0",
   "description": "Self-Care — Agent trace analysis and context remediation plugin",
@@ -16,7 +15,10 @@
         "name": "Not Diamond",
         "email": "support@notdiamond.ai"
       },
-      "source": ".",
+      "source": {
+        "source": "github",
+        "repo": "Not-Diamond/self-care"
+      },
       "category": "development"
     }
   ]
