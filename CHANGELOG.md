@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.6 (2026-04-07)
+### Fixes
+- add source field to plugin manifest and remove obsolete copy script
+
 ## v0.0.5 (2026-04-07)
 ### Fixes
 - remove source information from marketplace.json
