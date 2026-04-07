@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.5 (2026-04-07)
+### Fixes
+- remove source information from marketplace.json
+
 ## v0.0.4 (2026-04-07)
 ### Features
 - add source_url_base to traces and related components for LangSmith integration
