@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.7 (2026-04-07)
+### Fixes
+- update plugin source path in marketplace.json and adjust release script for new directory structure
+
 ## v0.0.6 (2026-04-07)
 ### Fixes
 - add source field to plugin manifest and remove obsolete copy script
