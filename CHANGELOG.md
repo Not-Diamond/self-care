@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.11 (2026-04-07)
+### Fixes
+- update plugin source path in marketplace.json and adjust prepare-release.sh for staging directory
+
 ## v0.0.10 (2026-04-07)
 ### Fixes
 - make plugin scripts executable during release preparation
