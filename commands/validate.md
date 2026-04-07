@@ -14,7 +14,7 @@ Validate the provided trace file and report its metadata. Supports both OTEL (JS
 Run the deterministic trace validator:
 
 ```bash
-npx tsx agents/tools/validate-trace.ts $ARGUMENTS
+node "${CLAUDE_PLUGIN_ROOT}/agents/tools/validate-trace.mjs" $ARGUMENTS
 ```
 
 Parse the JSON output. The result contains:

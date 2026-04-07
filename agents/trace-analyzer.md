@@ -22,11 +22,11 @@ You may ONLY use Bash for commands that require shell piping or system utilities
 - `grep -o '<pattern>' <file> | sort | uniq -c | sort -rn | head -N` — frequency counting
 - `mkdir -p <path>` — directory creation (only for `.self-care/memory/` or `.self-care/reports/`)
 - `date -u +"%Y-%m-%dT%H:%M:%SZ"` — UTC timestamp
-- `npx tsx agents/tools/check-tool-failure.ts <file>` — deterministic tool-failure detection
-- `npx tsx agents/tools/check-step-repetition.ts <file>` — deterministic step-repetition detection
-- `npx tsx agents/tools/precheck-missed-action.ts <file>` — pre-check signals for missed-action
-- `npx tsx agents/tools/precheck-premature-termination.ts <file>` — pre-check signals for premature-termination
-- `npx tsx agents/tools/precheck-goal-drift.ts <file>` — pre-check signals for goal-drift
+- `node "${CLAUDE_PLUGIN_ROOT}/agents/tools/check-tool-failure.mjs" <file>` — deterministic tool-failure detection
+- `node "${CLAUDE_PLUGIN_ROOT}/agents/tools/check-step-repetition.mjs" <file>` — deterministic step-repetition detection
+- `node "${CLAUDE_PLUGIN_ROOT}/agents/tools/precheck-missed-action.mjs" <file>` — pre-check signals for missed-action
+- `node "${CLAUDE_PLUGIN_ROOT}/agents/tools/precheck-premature-termination.mjs" <file>` — pre-check signals for premature-termination
+- `node "${CLAUDE_PLUGIN_ROOT}/agents/tools/precheck-goal-drift.mjs" <file>` — pre-check signals for goal-drift
 
 **Everything else MUST use dedicated tools.** In particular:
 - Pattern matching without pipes → use the **Grep** tool
@@ -80,23 +80,23 @@ Before spawning interpretive skill agents, run the deterministic detection tools
 **Run all 5 tools in parallel** (five Bash calls in one message):
 
 ```bash
-npx tsx agents/tools/check-tool-failure.ts <trace_file>
+node "${CLAUDE_PLUGIN_ROOT}/agents/tools/check-tool-failure.mjs" <trace_file>
 ```
 
 ```bash
-npx tsx agents/tools/check-step-repetition.ts <trace_file>
+node "${CLAUDE_PLUGIN_ROOT}/agents/tools/check-step-repetition.mjs" <trace_file>
 ```
 
 ```bash
-npx tsx agents/tools/precheck-missed-action.ts <trace_file>
+node "${CLAUDE_PLUGIN_ROOT}/agents/tools/precheck-missed-action.mjs" <trace_file>
 ```
 
 ```bash
-npx tsx agents/tools/precheck-premature-termination.ts <trace_file>
+node "${CLAUDE_PLUGIN_ROOT}/agents/tools/precheck-premature-termination.mjs" <trace_file>
 ```
 
 ```bash
-npx tsx agents/tools/precheck-goal-drift.ts <trace_file>
+node "${CLAUDE_PLUGIN_ROOT}/agents/tools/precheck-goal-drift.mjs" <trace_file>
 ```
 
 **Deterministic tools** (check-tool-failure, check-step-repetition) output final events with `skill`, `events`, and `resolved_previous` fields.
@@ -105,8 +105,8 @@ npx tsx agents/tools/precheck-goal-drift.ts <trace_file>
 
 **If previous events exist**, pass them via `--previous` to the deterministic tools only:
 ```bash
-npx tsx agents/tools/check-tool-failure.ts <trace_file> --previous '<previous_events_json>'
-npx tsx agents/tools/check-step-repetition.ts <trace_file> --previous '<previous_events_json>'
+node "${CLAUDE_PLUGIN_ROOT}/agents/tools/check-tool-failure.mjs" <trace_file> --previous '<previous_events_json>'
+node "${CLAUDE_PLUGIN_ROOT}/agents/tools/check-step-repetition.mjs" <trace_file> --previous '<previous_events_json>'
 ```
 
 Parse the JSON output from each tool. Store the pre-check results for use in Step 2.

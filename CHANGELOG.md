@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.12 (2026-04-07)
+### Fixes
+- add agent tool paths to sanitize-patterns.json and update bundling in prepare-release.sh
+
 ## v0.0.11 (2026-04-07)
 ### Fixes
 - update plugin source path in marketplace.json and adjust prepare-release.sh for staging directory

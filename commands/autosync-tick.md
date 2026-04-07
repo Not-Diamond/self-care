@@ -57,7 +57,7 @@ Process `result.traces` in order. For each trace:
 Run:
 
 ```bash
-npx tsx agents/tools/validate-trace.ts "<file_path>"
+node "${CLAUDE_PLUGIN_ROOT}/agents/tools/validate-trace.mjs" "<file_path>"
 ```
 
 Parse the JSON output.

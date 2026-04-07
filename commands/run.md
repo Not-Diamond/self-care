@@ -142,7 +142,7 @@ Stage 1/6: Validating trace...
 Run the same deterministic validator used by `/self-care:validate`:
 
 ```bash
-npx tsx agents/tools/validate-trace.ts "<trace_path>"
+node "${CLAUDE_PLUGIN_ROOT}/agents/tools/validate-trace.mjs" "<trace_path>"
 ```
 
 Parse the JSON output. See `commands/validate.md` for the full schema — the result contains `valid`, `format`, `errors`, `warnings`, and `metadata`.

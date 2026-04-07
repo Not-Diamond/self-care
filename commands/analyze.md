@@ -64,7 +64,7 @@ Store these values for use in later stages.
 **If `skip_validation` is false:** Run the deterministic trace validator:
 
 ```bash
-npx tsx agents/tools/validate-trace.ts "<trace_path>"
+node "${CLAUDE_PLUGIN_ROOT}/agents/tools/validate-trace.mjs" "<trace_path>"
 ```
 
 Parse the JSON output to extract validation status and metadata.
