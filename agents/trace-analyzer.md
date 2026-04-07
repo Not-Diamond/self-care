@@ -20,7 +20,7 @@ You may ONLY use Bash for commands that require shell piping or system utilities
 - `shasum -a 256 <file> | cut -c1-16` — trace/case hash computation
 - `echo -n '<json>' | shasum -a 256 | cut -c1-16` — case hash computation
 - `grep -o '<pattern>' <file> | sort | uniq -c | sort -rn | head -N` — frequency counting
-- `mkdir -p <path>` — directory creation (only for `.self-care/memory/` or `.self-care/reports/`)
+- `mkdir -p <path>` — directory creation (only for `.self-care/memory/`, `.self-care/reports/`, or `.self-care/traces/`)
 - `date -u +"%Y-%m-%dT%H:%M:%SZ"` — UTC timestamp
 - `node "${CLAUDE_PLUGIN_ROOT}/agents/tools/check-tool-failure.mjs" <file>` — deterministic tool-failure detection
 - `node "${CLAUDE_PLUGIN_ROOT}/agents/tools/check-step-repetition.mjs" <file>` — deterministic step-repetition detection

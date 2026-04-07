@@ -33,7 +33,7 @@ Before running the pipeline, check if the user has consented to analytics collec
 
 **Save the config**:
 1. Get timestamp: `date -u +"%Y-%m-%dT%H:%M:%SZ"`
-2. Ensure the config directory exists: `mkdir -p .self-care/`
+2. Ensure the config directories exist: `mkdir -p .self-care/traces .self-care/reports`
 3. Read existing `.self-care/config.json` to preserve other settings (e.g. `source`, `langsmith`). Merge the `analytics` key into the existing object and write it back:
    ```json
    {
@@ -114,14 +114,14 @@ Format duration as compact (e.g. "1.2s", "45s", "2m30s"). Omit duration if null.
 Run the fetch CLI. For LangSmith, pass `--project` from config's `langsmith.project`. For LangFuse, pass `--project-id` from config's `langfuse.project_id` (if available) and `--host` from config's `langfuse.host`.
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/lib/fetch.mjs" --source <source> --id <selected_trace_id> --project <project_name_or_id> > /tmp/self-care-fetch-<selected_trace_id>.json
+node "${CLAUDE_PLUGIN_ROOT}/lib/fetch.mjs" --source <source> --id <selected_trace_id> --project <project_name_or_id> > .self-care/traces/self-care-fetch-<selected_trace_id>.json
 ```
 
 Parse the JSON envelope:
-1. Read `/tmp/self-care-fetch-<selected_trace_id>.json`
-2. Extract the `.otel` value — write it to `/tmp/self-care-trace-<selected_trace_id>.json` using the **Write** tool
+1. Read `.self-care/traces/self-care-fetch-<selected_trace_id>.json`
+2. Extract the `.otel` value — write it to `.self-care/traces/self-care-trace-<selected_trace_id>.json` using the **Write** tool
 3. Extract `.source_url` — store as `source_url` for use in Stage 3 and Pipeline Summary (may be `null`)
-4. Set `trace_path` = `/tmp/self-care-trace-<selected_trace_id>.json`
+4. Set `trace_path` = `.self-care/traces/self-care-trace-<selected_trace_id>.json`
 
 Output:
 ```

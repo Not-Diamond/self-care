@@ -72,15 +72,15 @@ Construct a JSON object matching this schema:
 - Include `agentContext` only when user-provided details were passed to you. Write 1–2 sentences summarizing the agent's intended behavior from those details.
 - Write 2–4 `recommendations` based on the patterns you observed across all cases.
 
-### 2. Write the JSON to a temp file
+### 2. Write the JSON to the reports directory
 
-Use the **Write** tool to save the payload to `/tmp/self-care-report-<id>.json`, where `<id>` is the first 8 characters of `trace_id` (OTEL) or `session_id` (Claude Code). This avoids collisions if multiple pipelines run concurrently.
+Use the **Write** tool to save the payload to `.self-care/reports/self-care-report-<id>.json`, where `<id>` is the first 8 characters of `trace_id` (OTEL) or `session_id` (Claude Code). This avoids collisions if multiple pipelines run concurrently.
 
 ### 3. Invoke generate_report
 
 Run:
 ```
-bash agents/skills/scripts/generate_report.sh /tmp/self-care-report-<id>.json
+bash agents/skills/scripts/generate_report.sh .self-care/reports/self-care-report-<id>.json
 ```
 
 ### 4. Relay the output

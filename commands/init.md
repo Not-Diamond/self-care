@@ -104,27 +104,28 @@ If successful, parse the JSON output and note the `trace_count`.
 
 ### If source = LangFuse:
 
-Check that both `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are set:
+Check that `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_BASE_URL` are set:
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/check-env.sh" LANGFUSE_PUBLIC_KEY LANGFUSE_SECRET_KEY
+"${CLAUDE_PLUGIN_ROOT}/scripts/check-env.sh" LANGFUSE_PUBLIC_KEY LANGFUSE_SECRET_KEY LANGFUSE_BASE_URL
 ```
 
-If either shows `=unset`, output:
+If any shows `=unset`, output:
 ```
-✗ LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY must both be set.
+✗ LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, and LANGFUSE_BASE_URL must all be set.
   Add them to your .env file or export in your shell:
   export LANGFUSE_PUBLIC_KEY=pk-lf-...
   export LANGFUSE_SECRET_KEY=sk-lf-...
+  export LANGFUSE_BASE_URL=https://cloud.langfuse.com
 ```
 
 And **stop**.
 
-If set, ask via AskUserQuestion:
-```
-Enter your LangFuse host (press Enter for https://cloud.langfuse.com):
+If set, read the actual value of `LANGFUSE_BASE_URL` from the shell — do NOT assume or hardcode a default:
+```bash
+if [ -f .env ]; then set -a && source .env && set +a; fi && echo "$LANGFUSE_BASE_URL"
 ```
 
-Default to `https://cloud.langfuse.com` if empty. Store as `host`. Then validate:
+Store the printed value exactly as `host`. Then validate:
 ```bash
 if [ -f .env ]; then set -a && source .env && set +a; fi
 node "${CLAUDE_PLUGIN_ROOT}/lib/validate-creds.mjs" --source langfuse --host "$host"

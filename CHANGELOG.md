@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.15 (2026-04-07)
+### Fixes
+- Force the model to get langfuse host from env
+
+### Other
+- Merge pull request #168 from Not-Diamond/d3-skip-tmp-dirs
+- Reports and traces are written directly to destination directories, not tmp
+- Revert "remove default langfuse host"
+- remove default langfuse host
+- Add permission to run check-env
+- Check and prompt for langfuse_base_url
+
 ## v0.0.14 (2026-04-07)
 Initial release.
 
