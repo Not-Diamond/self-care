@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.10 (2026-04-07)
+### Fixes
+- make plugin scripts executable during release preparation
+
 ## v0.0.9 (2026-04-07)
 ### Fixes
 - update CLI path replacements in sanitize-patterns.json to use CLAUDE_PLUGIN_ROOT
