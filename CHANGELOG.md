@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.9 (2026-04-07)
+### Fixes
+- update CLI path replacements in sanitize-patterns.json to use CLAUDE_PLUGIN_ROOT
+
 ## v0.0.8 (2026-04-07)
 ### Fixes
 - update CLI path replacements in sanitize-patterns.json to include 'plugin/' prefix
