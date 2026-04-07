@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.0.14 (2026-04-07)
+Initial release.
+
 ## v0.0.13 (2026-04-07)
 ### Fixes
 - add telemetry script handling in prepare-release.sh
