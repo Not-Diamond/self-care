@@ -2,6 +2,18 @@
 
 Thank you for your interest in contributing to Self-Care!
 
+## Project Status
+
+We're sharing this project openly to exchange ideas and invite collaboration. Please read the following section carefully before diving in.
+
+Self-Care is under active development. The maintainers are iterating quickly, and **the project does not guarantee backward or forward compatibility** at this time. This means:
+
+- APIs, commands, file formats, and behavior may change without notice
+- Your fork or dependent tooling may break after an update
+- PRs may conflict with in-flight changes or be superseded by new directions
+
+We encourage you to try the project, file issues, and open PRs — but please keep these expectations in mind. We value your contributions and will do our best to communicate major changes, but stability is not a near-term goal.
+
 ## Bug Reports
 
 [Open an issue](https://github.com/Not-Diamond/self-care/issues) with the **Bug report** template. A good bug report includes:
