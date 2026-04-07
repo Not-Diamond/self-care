@@ -18,7 +18,7 @@ Do not ask the user any questions.
 ```text
 CONFIG_PATH=".self-care/config.json"
 STATE_PATH=".self-care/autosync.json"
-AUTOSYNC_CLI="node lib/autosync.mjs"
+AUTOSYNC_CLI="node plugin/lib/autosync.mjs"
 PROJECT_NAME=<run `basename "$(pwd)"` and store the result>
 ```
 
@@ -27,7 +27,7 @@ PROJECT_NAME=<run `basename "$(pwd)"` and store the result>
 Run:
 
 ```bash
-node lib/autosync.mjs status --config "$CONFIG_PATH" --state "$STATE_PATH"
+node plugin/lib/autosync.mjs status --config "$CONFIG_PATH" --state "$STATE_PATH"
 ```
 
 Parse the JSON output and store `loop_task_id` if present.
@@ -49,7 +49,7 @@ Delete those tasks as a best-effort cleanup.
 Run:
 
 ```bash
-node lib/autosync.mjs disable --state "$STATE_PATH"
+node plugin/lib/autosync.mjs disable --state "$STATE_PATH"
 ```
 
 Parse the JSON output.

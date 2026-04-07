@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.8 (2026-04-07)
+### Fixes
+- update CLI path replacements in sanitize-patterns.json to include 'plugin/' prefix
+
 ## v0.0.7 (2026-04-07)
 ### Fixes
 - update plugin source path in marketplace.json and adjust release script for new directory structure

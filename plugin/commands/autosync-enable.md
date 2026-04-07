@@ -23,7 +23,7 @@ Store runtime state, pending traces, and staged trace files under `.self-care/au
 ```text
 CONFIG_PATH=".self-care/config.json"
 STATE_PATH=".self-care/autosync.json"
-AUTOSYNC_CLI="node lib/autosync.mjs"
+AUTOSYNC_CLI="node plugin/lib/autosync.mjs"
 PROJECT_NAME=<run `basename "$(pwd)"` and store the result>
 TICK_PROMPT="/self-care:autosync-tick $PROJECT_NAME"
 ```
@@ -44,7 +44,7 @@ If the file does not exist or is invalid JSON, stop and output:
 Run:
 
 ```bash
-node lib/autosync.mjs status --config "$CONFIG_PATH" --state "$STATE_PATH"
+node plugin/lib/autosync.mjs status --config "$CONFIG_PATH" --state "$STATE_PATH"
 ```
 
 Parse the JSON output and store:
@@ -146,7 +146,7 @@ Source `.env` first so credential validation sees the provider keys, then run:
 
 ```bash
 if [ -f .env ]; then set -a && source .env && set +a; fi
-node lib/autosync.mjs enable --config "$CONFIG_PATH" --state "$STATE_PATH" --poll-interval-minutes "$POLL_INTERVAL_MINUTES" --sampling-rate "$SAMPLING_RATE" --loop-task-id "$LOOP_TASK_ID"
+node plugin/lib/autosync.mjs enable --config "$CONFIG_PATH" --state "$STATE_PATH" --poll-interval-minutes "$POLL_INTERVAL_MINUTES" --sampling-rate "$SAMPLING_RATE" --loop-task-id "$LOOP_TASK_ID"
 ```
 
 Parse the JSON output. If the CLI returns an error, delete the task you just created with `CronDelete`, then report the error and stop.

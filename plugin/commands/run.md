@@ -81,7 +81,7 @@ Read `$CONFIG_PATH`. If the file does not exist or is invalid JSON:
 
 **Fetch recent traces:**
 ```bash
-node lib/list.mjs --source <source> --limit 10 --config "$CONFIG_PATH"
+node plugin/lib/list.mjs --source <source> --limit 10 --config "$CONFIG_PATH"
 ```
 
 Parse the JSON output. Present the trace list via AskUserQuestion using box-drawing characters (no triple-backtick code fences):
@@ -114,7 +114,7 @@ Format duration as compact (e.g. "1.2s", "45s", "2m30s"). Omit duration if null.
 Run the fetch CLI. For LangSmith, pass `--project` from config's `langsmith.project`. For LangFuse, pass `--project-id` from config's `langfuse.project_id` (if available) and `--host` from config's `langfuse.host`.
 
 ```bash
-node lib/fetch.mjs --source <source> --id <selected_trace_id> --project <project_name_or_id> > /tmp/self-care-fetch-<selected_trace_id>.json
+node plugin/lib/fetch.mjs --source <source> --id <selected_trace_id> --project <project_name_or_id> > /tmp/self-care-fetch-<selected_trace_id>.json
 ```
 
 Parse the JSON envelope:

@@ -21,7 +21,7 @@ STATE_PATH=".self-care/autosync.json"
 Run:
 
 ```bash
-node lib/autosync.mjs status --config "$CONFIG_PATH" --state "$STATE_PATH"
+node plugin/lib/autosync.mjs status --config "$CONFIG_PATH" --state "$STATE_PATH"
 ```
 
 Parse the JSON output and display:

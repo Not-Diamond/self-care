@@ -22,7 +22,7 @@ If `$ARGUMENTS` contains a project identifier from the scheduled task prompt, ig
 ```text
 CONFIG_PATH=".self-care/config.json"
 STATE_PATH=".self-care/autosync.json"
-AUTOSYNC_CLI="node lib/autosync.mjs"
+AUTOSYNC_CLI="node plugin/lib/autosync.mjs"
 ```
 
 ## Step 2: Poll Autosync State And Stage Work
@@ -31,7 +31,7 @@ Source `.env` first, then run:
 
 ```bash
 if [ -f .env ]; then set -a && source .env && set +a; fi
-node lib/autosync.mjs tick --config "$CONFIG_PATH" --state "$STATE_PATH"
+node plugin/lib/autosync.mjs tick --config "$CONFIG_PATH" --state "$STATE_PATH"
 ```
 
 Parse the JSON output.
@@ -105,7 +105,7 @@ Report saved to: <path>
 Only after both analysis and report generation succeed, run:
 
 ```bash
-node lib/autosync.mjs complete --state "$STATE_PATH" --trace-hash "<trace_hash>"
+node plugin/lib/autosync.mjs complete --state "$STATE_PATH" --trace-hash "<trace_hash>"
 ```
 
 If analysis or report generation fails, leave the trace pending by skipping this step.

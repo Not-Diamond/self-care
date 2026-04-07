@@ -61,7 +61,7 @@ Store the choice as `source`.
 
 Check that `LANGSMITH_API_KEY` is set:
 ```bash
-scripts/check-env.sh LANGSMITH_API_KEY
+plugin/scripts/check-env.sh LANGSMITH_API_KEY
 ```
 
 If the output shows `LANGSMITH_API_KEY=unset`, output the following and **stop**:
@@ -74,7 +74,7 @@ If the output shows `LANGSMITH_API_KEY=unset`, output the following and **stop**
 If set, fetch available projects (source `.env` again since each Bash call is a fresh shell):
 ```bash
 if [ -f .env ]; then set -a && source .env && set +a; fi
-node lib/validate-creds.mjs --source langsmith --list-projects
+node plugin/lib/validate-creds.mjs --source langsmith --list-projects
 ```
 
 Parse the JSON output. The response contains `{ projects: [{ name, run_count }] }`.
@@ -95,7 +95,7 @@ Include all fetched projects as numbered options. The user selects one.
 Store the selected project name as `project_name`. Then validate:
 ```bash
 if [ -f .env ]; then set -a && source .env && set +a; fi
-node lib/validate-creds.mjs --source langsmith --project "$project_name"
+node plugin/lib/validate-creds.mjs --source langsmith --project "$project_name"
 ```
 
 If the command exits non-zero, output the stderr message and **stop**.
@@ -106,7 +106,7 @@ If successful, parse the JSON output and note the `trace_count`.
 
 Check that both `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are set:
 ```bash
-scripts/check-env.sh LANGFUSE_PUBLIC_KEY LANGFUSE_SECRET_KEY
+plugin/scripts/check-env.sh LANGFUSE_PUBLIC_KEY LANGFUSE_SECRET_KEY
 ```
 
 If either shows `=unset`, output:
@@ -127,7 +127,7 @@ Enter your LangFuse host (press Enter for https://cloud.langfuse.com):
 Default to `https://cloud.langfuse.com` if empty. Store as `host`. Then validate:
 ```bash
 if [ -f .env ]; then set -a && source .env && set +a; fi
-node lib/validate-creds.mjs --source langfuse --host "$host"
+node plugin/lib/validate-creds.mjs --source langfuse --host "$host"
 ```
 
 If the command exits non-zero, output the stderr message and **stop**.
