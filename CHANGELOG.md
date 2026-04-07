@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.13 (2026-04-07)
+### Fixes
+- add telemetry script handling in prepare-release.sh
+
 ## v0.0.12 (2026-04-07)
 ### Fixes
 - add agent tool paths to sanitize-patterns.json and update bundling in prepare-release.sh
