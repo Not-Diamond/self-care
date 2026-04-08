@@ -152,12 +152,108 @@ Extract from the result:
 - **validation_status**: `valid` — true or false
 - **Format-specific fields** from `metadata`: trace ID / session ID, span count / message count, service name, time range, event types — whichever are present for the format.
 
-**If validation_status is false, stop the pipeline here.** Report the validation errors and do not proceed to Stage 2.
+**If validation_status is false**, check whether the errors are **recoverable** (eligible for flexible validation):
+
+Recoverable errors (any of these present → offer fallback):
+- "No system prompt found"
+- "Unknown trace format"
+- "Invalid Claude Code event structure"
+
+Unrecoverable errors (if ANY of these are present → do NOT offer fallback):
+- "File not found"
+- "File is not valid JSON or JSONL"
+- "Empty Claude Code trace"
+- "Missing resourceSpans"
+- "No spans found in trace"
+
+**If any unrecoverable error is present**, stop the pipeline here. Report the validation errors and do not proceed to Stage 2.
+
+**If at least one error is recoverable**, offer flexible validation via **AskUserQuestion**:
+
+- **question**:
+  ```
+  Deterministic validation failed:
+  ─────────────────────────────────────────────────────────
+  <each error on its own line, prefixed with •>
+  ─────────────────────────────────────────────────────────
+  Would you like to try flexible (AI-assisted) validation?
+  This uses an LLM to assess whether the trace is still
+  structurally usable despite not passing strict format checks.
+  ```
+- **header**: "Flexible Validation"
+- **options**:
+  - `{ "label": "Try flexible validation", "description": "Use AI to assess trace structure" }`
+  - `{ "label": "Stop", "description": "Accept the validation failure" }`
+
+**If the user selects "Stop"**, stop the pipeline here. Report the validation errors and do not proceed to Stage 2.
+
+**If the user selects "Try flexible validation"**, invoke the **flexible-validator** agent via **Task** with:
+- **trace_path**: the trace file path
+- **deterministic_result**: the full JSON output from the deterministic validator
+
+Parse the agent's JSON output.
+
+- **If the flexible validator returns `valid: true`**: set `validation_status = true` and `validationMethod = "flexible"`, populate **format** and format-specific fields from the flexible result's `metadata`. Continue to "After validation succeeds" below.
+- **If the flexible validator returns `valid: false`**: stop the pipeline. Output the flexible validator's errors and `flexibleNotes`.
 
 **After validation succeeds, output:**
 ```
-✓ Valid <format> trace (<span_count> spans or <message_count> messages)
+✓ Valid <format> trace (<span_count> spans or <message_count> messages)<if validationMethod is "flexible"> (flexible validation)</if>
 ```
+
+---
+
+## Stage 1.5: Load Analysis Configuration
+
+**Before starting, output:**
+```
+Loading analysis configuration...
+```
+
+1. **Read the config file** at `.self-care/config.json` using the **Read** tool.
+
+2. **Extract the `analysis` section** (if present). Apply defaults for missing fields:
+   ```json
+   {
+     "disabledSkills": [],
+     "severityOverrides": {},
+     "exclusions": [],
+     "autoFix": "prompt"
+   }
+   ```
+
+3. **Validate the config**:
+   - Check each skill ID in `disabledSkills` against valid skills
+   - Check each severity override value is one of: `high`, `medium`, `low`
+   - Check each exclusion has valid `type` (`trace_name`, `service_name`, `attribute`)
+   - Check `autoFix` is one of: `auto`, `prompt`, `disabled`
+   - **If invalid values found**: output warning and use defaults for that field
+     ```
+     Warning: Unknown skill 'foo' in disabledSkills, ignoring
+     Warning: Invalid severity 'extreme' for tool-failure, ignoring
+     ```
+
+4. **Check exclusions** against current trace metadata from Stage 1 validation:
+   - Extract `traceName` from validation metadata: use the root span's `name` field (OTEL) or session ID (Claude Code)
+   - For `trace_name` exclusions: match against `traceName` (falls back to trace ID if no name)
+   - For `service_name` exclusions: match against `serviceName` from validation metadata
+   - For `attribute` exclusions: match against the root span's attributes (OTEL) or top-level metadata (Claude Code)
+   - Patterns support `*` (any characters) and `?` (single character) wildcards
+   - **If trace matches any exclusion**, output and stop:
+     ```
+     Trace excluded by configuration (matched: <exclusion_pattern>)
+     ```
+
+5. **Read agent context** from `.self-care/context.md` if it exists:
+   - Strip HTML comments using regex: `<!--[\s\S]*?-->`
+   - Trim whitespace from the result
+   - Store as `agentContext` (may be empty string if file doesn't exist or is only comments)
+
+6. **Store configuration** for use in subsequent stages:
+   - `disabledSkills` → passed to trace-analyzer (Stage 2)
+   - `severityOverrides` → passed to trace-analyzer (Stage 2)
+   - `agentContext` → passed to trace-analyzer (Stage 2)
+   - `autoFix` → used in Stage 4
 
 ---
 
@@ -170,12 +266,18 @@ Stage 2/6: Analyzing for cases...
 
 Use the **trace-analyzer** agent to analyze the trace file at: `<trace_path>`
 
-Provide the agent with the validation context from Stage 1, including the **format** field so it applies the correct analysis strategy:
-- OTEL: span-based analysis
-- Claude Code: event-based analysis
+Provide the agent with:
+- Validation context from Stage 1 (format, metadata)
+- **Analysis configuration from Stage 1.5**:
+  - `disabledSkills`: skills to skip during analysis
+  - `severityOverrides`: severity adjustments to apply after detection
+  - `agentContext`: user-provided description of expected agent behavior
 
 If **details** is non-empty, pass it to the agent as additional context:
 > "The user has provided the following context about this trace: <details>"
+
+If **agentContext** is non-empty, include it in the prompt:
+> "Agent context from configuration: <agentContext>"
 
 After the agent returns:
 
@@ -231,7 +333,21 @@ The agent will create a report at `./.self-care/reports/` and output a terminal 
 
 ## Stage 4: Finding Review
 
-**Before starting, output:**
+**Before starting, check `autoFix` setting from Stage 1.5:**
+
+- If `autoFix` is `"disabled"`: **skip Stage 4 entirely**
+  - Output: `Stage 4/6: Skipped (auto-fix disabled in configuration)`
+  - Jump directly to Stage 5 with all cases categorized by their original `classification`
+  - Set `review_skipped = true`
+
+- If `autoFix` is `"auto"`: **skip review, apply all fixes automatically**
+  - Output: `Stage 4/6: Auto-applying fixes (configured in .self-care/config.json)`
+  - All cases with `classification: "auto-fixable"` will be applied without prompting
+  - Set `review_skipped = true`, `auto_apply = true`
+
+- If `autoFix` is `"prompt"` (default): **continue with normal review flow below**
+
+**Output:**
 ```
 Stage 4/6: Reviewing findings...
 ```
@@ -511,7 +627,7 @@ Free-text responses are captured as additional notes.
 After the user responds, send feedback via telemetry:
 
 ```
-bash agents/skills/scripts/telemetry.sh sc_feedback_run '<json>'
+bash "${CLAUDE_PLUGIN_ROOT}/agents/skills/scripts/telemetry.sh" sc_feedback_run '<json>'
 ```
 
 Where `<json>` is:

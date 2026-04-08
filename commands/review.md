@@ -346,7 +346,7 @@ If opted in, use **AskUserQuestion**:
 Send feedback via telemetry:
 
 ```
-bash agents/skills/scripts/telemetry.sh sc_feedback_review '<json>'
+bash "${CLAUDE_PLUGIN_ROOT}/agents/skills/scripts/telemetry.sh" sc_feedback_review '<json>'
 ```
 
 Where `<json>` is:

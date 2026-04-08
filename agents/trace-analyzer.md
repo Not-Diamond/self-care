@@ -40,6 +40,36 @@ You will receive:
 2. The detected format (OTEL or Claude Code)
 3. (Optional) A pre-computed trace hash (16-character hex string)
 4. (Optional) User-provided context describing the agent being analyzed (e.g. its purpose, domain, expected behavior)
+5. (Optional) **Analysis configuration** from run.md:
+   - `disabledSkills`: Array of skill IDs to skip during analysis
+   - `severityOverrides`: Map of skill ID to severity (e.g., `{"tool-failure": "low"}`)
+   - `agentContext`: User-provided description of expected agent behavior (from `.self-care/context.md`)
+
+## Using the Configuration
+
+When analysis configuration is provided, apply it as follows:
+
+### Disabled Skills
+- **In Step 1.5**: Skip deterministic tools for disabled skills (e.g., if `tool-failure` is disabled, don't run `check-tool-failure.ts`)
+- **In Step 2**: Do not spawn Task agents for disabled skills
+- Output a note for each skipped skill: `  ○ <skill-name>: disabled`
+
+### Severity Overrides
+- **In Step 4** (Final JSON): After collecting all events, apply severity overrides
+- For each event where `severityOverrides[event.type]` exists, replace `event.severity` with the override value
+- This happens AFTER skill detection, so overrides adjust the final output without affecting detection logic
+
+### Agent Context
+- **In Step 2**: Include agent context in the Task prompt for ALL interpretive skill agents
+- Add this section to the prompt:
+  ```
+  AGENT CONTEXT (from user configuration):
+  <agentContext>
+
+  Consider this context when determining if a behavior is truly problematic
+  or if it's intentional/expected for this specific agent.
+  ```
+- Skills should use this context to reduce false positives (e.g., if context says "agent skips greetings for returning customers", don't flag missing greetings as persona-adherence issues)
 
 ## Process
 
@@ -113,9 +143,9 @@ Parse the JSON output from each tool. Store the pre-check results for use in Ste
 
 ### Step 2: Spawn Interpretive Skill Agents in Parallel
 
-Use the Task tool to spawn all 12 interpretive skill agents in parallel. Each agent receives the trace content and returns JSON findings.
+Use the Task tool to spawn interpretive skill agents in parallel. Skip any skill listed in `disabledSkills` (output `  ○ <skill-name>: disabled` for each). Each remaining agent receives the trace content and returns JSON findings.
 
-**Skill agents to spawn** (all in a single message with parallel Task calls):
+**Skill agents to spawn** (all enabled skills in a single message with parallel Task calls):
 
 1. **check-grounding** - Detect hallucination/ungrounded claims and user data claims before retrieval
 2. **check-missed-action** - Detect skipped expected actions
@@ -335,7 +365,7 @@ The 12 detection skills cover:
 
 - Compute trace hash and load memory FIRST (Step 0)
 - Run deterministic tools AND pre-check tools via Bash in Step 1.5 (all 5 in parallel)
-- Spawn all 12 interpretive skill agents in PARALLEL using multiple Task tool calls in a single message
+- Spawn all enabled interpretive skill agents in PARALLEL using multiple Task tool calls in a single message (skip any in `disabledSkills`)
 - For missed-action, premature-termination, and goal-drift: include pre-check signals in the Task prompt
 - Each skill agent uses the `general-purpose` subagent_type
 - Collect results from BOTH deterministic tools (Bash output) and interpretive agents (Task output)

@@ -114,15 +114,36 @@ COMMANDS
     Display this help information.
 
 
-  /self-care:config [analytics on|off]
+  /self-care:config [subcommand]
     View or change Self-Care configuration settings.
 
     Subcommands:
-      (no args)         Show current configuration
-      analytics on      Enable anonymous usage analytics
-      analytics off     Disable usage analytics
+      (no args)                    Show current configuration
+      analytics on|off             Enable/disable usage analytics
+      disable <skill>              Disable a detection skill
+      enable <skill>               Re-enable a detection skill
+      severity <skill> <level>     Override severity (high|medium|low)
+      severity <skill> reset       Remove severity override
+      exclude <pattern>            Add trace exclusion pattern
+      include <pattern>            Remove trace exclusion pattern
+      autofix auto|prompt|disabled Set auto-fix behavior
+      reset                        Reset analysis config to defaults
 
     Config is stored at: .self-care/config.json
+
+
+  /self-care:context [show|reset]
+    View or edit agent context for Self-Care analysis.
+
+    Describe your agent's expected behavior to help Self-Care
+    distinguish intentional patterns from problems.
+
+    Subcommands:
+      (no args)    Prompt to edit agent context
+      show         Display current agent context
+      reset        Reset to default template
+
+    Context is stored at: .self-care/context.md
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -152,22 +173,25 @@ QUICK START
   1. Set up a trace source:
      /self-care:init
 
-  2. Enable background autosync:
+  2. (Optional) Describe your agent's behavior:
+     /self-care:context
+
+  3. Enable background autosync:
      /self-care:autosync-enable
 
-  3. Analyze a trace (interactive picker):
+  4. Analyze a trace (interactive picker):
      /self-care:run
 
-  4. Analyze a specific file:
+  5. Analyze a specific file:
      /self-care:run ./trace.json
 
-  5. Review pending reports:
+  6. Review pending reports:
      /self-care:review
 
-  6. Check autosync status:
+  7. Check autosync status:
      /self-care:autosync-status
 
-  7. Validate trace format:
+  8. Validate trace format:
      /self-care:validate ./trace.json
 
 

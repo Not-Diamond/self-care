@@ -1,6 +1,6 @@
 {
   "name": "self-care",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "Self-Care — Agent trace analysis and context remediation plugin",
   "owner": {
     "name": "Not Diamond",
@@ -10,7 +10,7 @@
     {
       "name": "self-care",
       "description": "Trace analysis and context remediation for AI agents",
-      "version": "0.0.15",
+      "version": "0.0.16",
       "source": "./",
       "author": {
         "name": "Not Diamond",

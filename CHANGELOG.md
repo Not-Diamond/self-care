@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.0.16 (2026-04-08)
+### Features
+- Context and structured settings
+
+### Fixes
+- remove Bash tool from flexible trace validator documentation
+- enhance validation output to include validation method for flexible validation
+
+### Other
+- Merge pull request #171 from Not-Diamond/d3-user-context
+- Specvector comment
+- Disable flag will use AskUserQuestion to simplify UX
+- Merge pull request #172 from Not-Diamond/trace-validation-fallback
+- enable portable dev builds from self-care-internal
+- adds optional flexible trace validation
+- Update readme phrasing to "common" quality issues
+- Specvector documentation
+- Remove analysis config from init command
+
 ## v0.0.15 (2026-04-07)
 ### Fixes
 - Force the model to get langfuse host from env

@@ -8,6 +8,7 @@ allowed-tools:
   - Glob
   - Task
   - Bash
+  - AskUserQuestion
 ---
 
 # Analyze Trace
@@ -87,7 +88,51 @@ After validation (or format detection), extract these fields based on detected f
 
 - **validation_status**: PASSED or FAILED
 
-**If validation fails, stop here and report the failure. Do not proceed to analysis.**
+**If validation fails and `skip_validation` is false**, check whether the errors are **recoverable** (eligible for flexible validation):
+
+Recoverable errors (any of these present → offer fallback):
+- "No system prompt found"
+- "Unknown trace format"
+- "Invalid Claude Code event structure"
+
+Unrecoverable errors (if ANY of these are present → do NOT offer fallback):
+- "File not found"
+- "File is not valid JSON or JSONL"
+- "Empty Claude Code trace"
+- "Missing resourceSpans"
+- "No spans found in trace"
+
+**If any unrecoverable error is present**, stop here and report the failure. Do not proceed to analysis.
+
+**If at least one error is recoverable**, offer flexible validation via **AskUserQuestion**:
+
+- **question**:
+  ```
+  Deterministic validation failed:
+  ─────────────────────────────────────────────────────────
+  <each error on its own line, prefixed with •>
+  ─────────────────────────────────────────────────────────
+  Would you like to try flexible (AI-assisted) validation?
+  This uses an LLM to assess whether the trace is still
+  structurally usable despite not passing strict format checks.
+  ```
+- **header**: "Flexible Validation"
+- **options**:
+  - `{ "label": "Try flexible validation", "description": "Use AI to assess trace structure" }`
+  - `{ "label": "Stop", "description": "Accept the validation failure" }`
+
+**If the user selects "Stop"**, stop here and report the failure. Do not proceed to analysis.
+
+**If the user selects "Try flexible validation"**, invoke the **flexible-validator** agent via **Task** with:
+- **trace_path**: the trace file path
+- **deterministic_result**: the full JSON output from the deterministic validator
+
+Parse the agent's JSON output.
+
+- **If the flexible validator returns `valid: true`**: populate **format** and format-specific fields from the flexible result's `metadata`, and continue to Stage 2.
+- **If the flexible validator returns `valid: false`**: stop here and report the flexible validator's errors and `flexibleNotes`. Do not proceed to analysis.
+
+**If validation fails and `skip_validation` is true**, stop here and report the failure. Do not proceed to analysis.
 
 ### Stage 2: Analysis
 

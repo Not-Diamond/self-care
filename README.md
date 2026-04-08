@@ -5,7 +5,7 @@
 
 Agent trace analysis and context remediation plugin for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 
-**Your AI agents fail in subtle ways** — they drift from goals, ignore context, skip steps, or hallucinate mid-task. These issues hide in traces and are hard to catch manually. Self-Care scans your agent traces, detects 14 types of quality issues, and helps you fix them.
+**Your AI agents fail in subtle ways** — they drift from goals, ignore context, skip steps, or hallucinate mid-task. These issues hide in traces and are hard to catch manually. Self-Care scans your agent traces, detects 14 types of common quality issues, and helps you fix them.
 
 ## Quick Start
 
@@ -129,7 +129,96 @@ Reports from autosync are saved to `.self-care/reports/` just like manual runs, 
 | `/self-care:autosync-disable` | Stop background monitoring |
 | `/self-care:autosync-status` | Show current autosync state |
 | `/self-care:config` | View or update configuration |
+| `/self-care:context` | Describe your agent's expected behavior |
 | `/self-care:help` | Show help and usage information |
+
+## Configuration
+
+Self-Care uses sensible defaults out of the box. All settings can be customized after init via `/self-care:config`.
+
+Config is stored at `.self-care/config.json`.
+
+### Disable / enable detection skills
+
+```bash
+/self-care:config disable step-repetition    # Disable a noisy skill
+/self-care:config enable step-repetition     # Re-enable it
+```
+
+### Severity overrides
+
+Override the default severity level for a skill's findings:
+
+```bash
+/self-care:config severity tool-failure low
+/self-care:config severity tool-failure reset   # remove override
+```
+
+### Trace exclusions
+
+Skip traces that match a pattern. Supports `*` and `?` wildcards.
+
+```bash
+/self-care:config exclude "trace_name:*health*"
+/self-care:config exclude "service_name:monitoring-*"
+/self-care:config exclude "attribute:environment=staging"
+/self-care:config include "trace_name:*health*"            # remove exclusion
+```
+
+### Auto-fix behavior
+
+Control how Self-Care handles auto-fixable findings:
+
+```bash
+/self-care:config autofix prompt    # Ask before each fix (default)
+/self-care:config autofix auto      # Apply fixes without prompting
+/self-care:config autofix disabled  # Report only, never apply fixes
+```
+
+### Agent context
+
+Describe your agent's expected behavior so Self-Care can distinguish intentional patterns from problems:
+
+```bash
+/self-care:context           # Edit agent context
+/self-care:context show      # View current context
+/self-care:context reset     # Reset to default template
+```
+
+### Reset to defaults
+
+```bash
+/self-care:config reset
+```
+
+### Example config
+
+```json
+{
+  "source": "langsmith",
+  "langsmith": {
+    "project": "my-agent-prod"
+  },
+  "analytics": {
+    "enabled": true,
+    "consentTimestamp": "2026-04-07T00:00:00Z"
+  },
+  "analysis": {
+    "disabledSkills": ["step-repetition", "ambiguous-instructions"],
+    "severityOverrides": {
+      "tool-failure": "low"
+    },
+    "exclusions": [
+      { "type": "trace_name", "pattern": "*health*" },
+      { "type": "attribute", "key": "environment", "pattern": "staging" }
+    ],
+    "autoFix": "prompt"
+  },
+  "initialized_at": "2026-04-07T00:00:00Z"
+}
+```
+
+Fields like `initialized_at` and `anonymous_id` are managed automatically by `/self-care:init`.
 
 ## What It Detects
 

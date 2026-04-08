@@ -133,11 +133,26 @@ node "${CLAUDE_PLUGIN_ROOT}/lib/validate-creds.mjs" --source langfuse --host "$h
 
 If the command exits non-zero, output the stderr message and **stop**.
 
-## Step 5: Create Directory Structure
+## Step 5: Analysis Defaults
 
-```bash
-mkdir -p .self-care
+Analysis will use sensible defaults. Display:
+
 ```
+Analysis defaults:
+  All 14 detection skills enabled
+  Auto-fix: prompt before applying
+  No trace exclusions
+  No agent context
+
+You can customize these anytime:
+  /self-care:config              View and modify settings
+  /self-care:config disable <skill>   Disable a detection skill
+  /self-care:config autofix <mode>    Set auto-fix (auto|prompt|disabled)
+  /self-care:config exclude <pattern> Exclude traces from analysis
+  /self-care:context             Describe your agent's expected behavior
+```
+
+---
 
 ## Step 6: Analytics Consent
 
@@ -165,6 +180,10 @@ Store the consent decision for inclusion in the config written in Step 7:
 
 ## Step 7: Write Config
 
+```bash
+mkdir -p .self-care
+```
+
 **Before writing**, read the existing `$CONFIG_PATH` (if it exists) and preserve the `anonymous_id` field if present. This ensures the user's anonymous telemetry identity survives reconfiguration.
 
 Write the config JSON to `$CONFIG_PATH`:
@@ -179,6 +198,12 @@ For LangSmith:
   "analytics": {
     "enabled": <from Step 6>,
     "consentTimestamp": "<from Step 6>"
+  },
+  "analysis": {
+    "disabledSkills": [],
+    "severityOverrides": {},
+    "exclusions": [],
+    "autoFix": "prompt"
   },
   "anonymous_id": "<preserved from existing config, or omit if not present>",
   "initialized_at": "<current ISO timestamp>"
@@ -197,6 +222,12 @@ For LangFuse:
     "enabled": <from Step 6>,
     "consentTimestamp": "<from Step 6>"
   },
+  "analysis": {
+    "disabledSkills": [],
+    "severityOverrides": {},
+    "exclusions": [],
+    "autoFix": "prompt"
+  },
   "anonymous_id": "<preserved from existing config, or omit if not present>",
   "initialized_at": "<current ISO timestamp>"
 }
@@ -206,11 +237,16 @@ Use the **Write** tool to write the config JSON to `$CONFIG_PATH`.
 
 ## Step 8: Output Summary
 
+Display the final summary:
+
 ```
 ✓ Self-Care initialized
   Source: <source> (<project details if applicable>)
-  Config: <CONFIG_PATH>
+  Config: .self-care/config.json
 
-Run /self-care:run to analyze a trace.
-Run /self-care:autosync-enable to turn on scheduled autosync.
+Next steps:
+  /self-care:run              Analyze a trace
+  /self-care:config           Customize analysis settings
+  /self-care:context          Describe your agent's behavior
+  /self-care:autosync-enable  Turn on scheduled autosync
 ```
