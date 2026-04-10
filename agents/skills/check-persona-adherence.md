@@ -167,6 +167,9 @@ When the severity table above is ambiguous, apply these definitions:
       "span": "<line number of persona break>",
       "description": "The agent was supposed to act as '<role>' but broke character by saying '<what it said>'",
       "evidence": "Defined as: '<name/role>' | Said: '<breaking statement>'",
+      "evidence_examined": "<the persona definition and the assistant message that broke it>",
+      "evidence_reasoning": "<how the statement breaks persona — e.g. 'Persona is customer service rep Sarah but agent said I am an AI assistant'>",
+      "evidence_turn_ref": "<turn with the breaking statement>",
       "proposedFix": "Reinforce persona with 'never reveal AI nature' instruction",
       "previous_case_hash": "<optional: case_hash if this matches a previous event>"
     }

@@ -174,6 +174,9 @@ function analyze(filePath2, previousEvents2) {
       span: `lines ${firstLine}-${lastLine}`,
       description: `${group.name}${argSummary} repeated ${count} times`,
       evidence: `Identical calls at lines: ${group.calls.map((c) => c.lineNumber).join(", ")}`,
+      evidence_examined: `${count} identical ${group.name} tool calls between lines ${firstLine} and ${lastLine}`,
+      evidence_reasoning: `The same tool was called ${count} times with identical arguments, indicating a retry loop without variation`,
+      evidence_turn_ref: `lines ${firstLine}-${lastLine}`,
       proposedFix: "Add 'try different approach after 3 failed attempts' instruction"
     };
     const prev = previousEvents2.find((p) => p.span === event.span);
@@ -188,6 +191,9 @@ function analyze(filePath2, previousEvents2) {
       span: `lines ${pattern.firstLine}-${pattern.lastLine}`,
       description: `Circular pattern: ${pattern.tools.join(" \u2192 ")} (${pattern.cycles} cycles)`,
       evidence: `Pattern at lines: ${pattern.lines.join(", ")}`,
+      evidence_examined: `Tool call sequence ${pattern.tools.join(" \u2192 ")} repeating ${pattern.cycles} times between lines ${pattern.firstLine} and ${pattern.lastLine}`,
+      evidence_reasoning: `The agent entered a circular loop calling the same sequence of tools ${pattern.cycles} times without progressing`,
+      evidence_turn_ref: `lines ${pattern.firstLine}-${pattern.lastLine}`,
       proposedFix: "Add loop detection instruction to break circular tool usage patterns"
     };
     const prev = previousEvents2.find((p) => p.span === event.span);

@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.0.17 (2026-04-10)
+### Features
+- Add context settings to hosted version
+- populate structured evidence fields in TS deterministic tools
+- add structured evidence fields to skill agents (batch 2/2)
+- add structured evidence fields to skill agents (batch 1/2)
+- add structured evidence fields to trace-analyzer output schema
+- add evidence_examined, evidence_reasoning, evidence_turn_ref to Finding type
+
+### Fixes
+- add structured evidence fields to trace-reconciliation output schema
+
+### Other
+- Merge pull request #174 from Not-Diamond/d3-readme-link
+- Merge remote-tracking branch 'origin/main' into d3-agent-context-hosted
+- Add form link to readme
+
 ## v0.0.16 (2026-04-08)
 ### Features
 - Context and structured settings

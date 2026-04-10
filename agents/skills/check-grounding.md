@@ -156,6 +156,9 @@ When the severity table above is ambiguous, apply these definitions:
       "span": "<line number or event index of assistant message>",
       "description": "The agent stated '<specific fact>' without looking it up first — this could be incorrect",
       "evidence": "<exact quote containing ungrounded claim>",
+      "evidence_examined": "<which assistant message and what claim — e.g. 'Assistant response in turn 5 to pricing question'>",
+      "evidence_reasoning": "<why this is ungrounded — e.g. 'No tool call to product_catalog preceded this pricing claim'>",
+      "evidence_turn_ref": "<turn(s) containing the ungrounded claim>",
       "proposedFix": "Add tool call to retrieve <data type> before stating",
       "previous_case_hash": "<optional: case_hash if this matches a previous event>"
     }

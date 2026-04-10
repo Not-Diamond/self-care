@@ -167,6 +167,9 @@ When the severity table above is ambiguous, apply these definitions:
       "span": "<line number or span identifier>",
       "description": "The agent crossed a safety boundary — <what it did that it shouldn't have, in plain terms>",
       "evidence": "Guardrail: '<rule>' | Violation: '<what the agent did>'",
+      "evidence_examined": "<the safety guardrail and the agent action that breached it>",
+      "evidence_reasoning": "<how the action breaches the guardrail — e.g. 'Agent shared customer SSN despite PII redaction guardrail'>",
+      "evidence_turn_ref": "<turn with the violation>",
       "proposedFix": "Strengthen safety constraint in system prompt"
     }
   ]

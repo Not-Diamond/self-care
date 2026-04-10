@@ -157,6 +157,9 @@ When the severity table above is ambiguous, apply these definitions:
       "span": "<line number of user request>",
       "description": "The customer asked the agent to '<action>' but the agent never did it",
       "evidence": "User: '<exact request text>'",
+      "evidence_examined": "<the user message containing the unfulfilled request>",
+      "evidence_reasoning": "<why the action was not fulfilled — e.g. 'No tool call to order_management was made and no response addressed the cancellation'>",
+      "evidence_turn_ref": "<turn with the user request>",
       "proposedFix": "Add <tool> call when user requests <action>",
       "previous_case_hash": "<optional: case_hash if this matches a previous event>"
     }

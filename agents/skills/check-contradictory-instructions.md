@@ -170,6 +170,9 @@ When the severity table above is ambiguous, apply these definitions:
       "span": "<line number or span identifier>",
       "description": "Two rules conflict: '<rule A>' vs '<rule B>' — the agent can't follow both at the same time",
       "evidence": "Directive A (source: system prompt): '<text>' | Directive B (source: user message): '<text>'",
+      "evidence_examined": "<both conflicting directives with their sources>",
+      "evidence_reasoning": "<why they conflict — e.g. 'Directive A requires escalation for billing but Directive B says resolve billing directly'>",
+      "evidence_turn_ref": "<turns containing each conflicting directive>",
       "proposedFix": "Resolve instruction conflict by adding priority rules or scope conditions"
     }
   ]

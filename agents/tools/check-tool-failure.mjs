@@ -189,6 +189,9 @@ function analyze(filePath2, previousEvents2) {
       span: `line ${g.lineNumber}`,
       description: `${prefix}${ERROR_LABEL[g.errorType]}${suffix}`,
       evidence: g.content.trim().slice(0, 200),
+      evidence_examined: `${toolName ? toolName + " tool call" : "Tool call"} at line ${g.lineNumber}${g.count > 1 ? ` (${g.count} consecutive failures)` : ""}`,
+      evidence_reasoning: `Tool returned ${ERROR_LABEL[g.errorType].toLowerCase()}${g.count > 1 ? ` ${g.count} times consecutively, suggesting a persistent issue` : ""}`,
+      evidence_turn_ref: `line ${g.lineNumber}`,
       proposedFix: FIX_TEMPLATE[g.errorType]
     };
     const prev = previousEvents2.find((p) => p.span === event.span);

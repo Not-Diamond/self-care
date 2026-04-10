@@ -151,6 +151,9 @@ When the severity table above is ambiguous, apply these definitions:
       "span": "<line number or span identifier>",
       "description": "The instruction '<instruction>' is unclear — the agent interpreted it as '<interpretation>' but it could also mean '<alternative>', which may lead to wrong results",
       "evidence": "Instruction: '<vague instruction>' | Interpretation: '<what agent did>' | Conservative alternative: '<safer choice>'",
+      "evidence_examined": "<the ambiguous instruction text from the system prompt or user message>",
+      "evidence_reasoning": "<why the interpretation was risky — e.g. 'Instruction says handle complaints but does not specify escalation threshold; agent offered 50% refund without authorization'>",
+      "evidence_turn_ref": "<turn containing the ambiguous instruction>",
       "proposedFix": "Tighten instruction wording with concrete thresholds and default behavior"
     }
   ]

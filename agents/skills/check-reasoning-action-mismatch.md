@@ -145,6 +145,9 @@ When the severity table above is ambiguous, apply these definitions:
       "span": "<line number of mismatched tool_use>",
       "description": "The agent said it would '<what it planned>' but actually did '<what it did>' — its actions didn't match its reasoning",
       "evidence": "Said: '<I will X>' | Did: '<tool_use Y>'",
+      "evidence_examined": "<the stated reasoning/intent and the actual action taken>",
+      "evidence_reasoning": "<how they diverge — e.g. 'Agent said it would search KB but instead called create_ticket'>",
+      "evidence_turn_ref": "<turn with reasoning → turn with action>",
       "proposedFix": "Execute stated plan or acknowledge change before switching",
       "previous_case_hash": "<optional: case_hash if this matches a previous event>"
     }

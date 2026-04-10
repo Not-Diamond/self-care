@@ -7,6 +7,8 @@ Agent trace analysis and context remediation plugin for [Claude Code](https://do
 
 **Your AI agents fail in subtle ways** — they drift from goals, ignore context, skip steps, or hallucinate mid-task. These issues hide in traces and are hard to catch manually. Self-Care scans your agent traces, detects 14 types of common quality issues, and helps you fix them.
 
+If you would like to run Self-Care continuously or share analyses across team members in your organization, you can sign up for early access to the hosted version [here](https://forms.gle/zFMKH14FXnXo4jeY8).
+
 ## Quick Start
 
 ```bash

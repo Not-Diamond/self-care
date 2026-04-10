@@ -162,6 +162,9 @@ When the severity table above is ambiguous, apply these definitions:
       "span": "<line number of final response>",
       "description": "The customer asked for '<goal>' but the agent ended up doing '<what was delivered>' instead — it went off track",
       "evidence": "User asked: '<initial request>' | Assistant delivered: '<final response topic>'",
+      "evidence_examined": "<the initial user request and the final agent response or action>",
+      "evidence_reasoning": "<how the response diverged from the original goal — e.g. 'User asked about billing but agent ended up discussing features'>",
+      "evidence_turn_ref": "<first turn → turn where drift occurred>",
       "proposedFix": "Add goal anchoring - verify response addresses original request",
       "previous_case_hash": "<optional: case_hash if this matches a previous event>"
     }

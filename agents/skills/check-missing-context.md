@@ -162,6 +162,9 @@ When the severity table above is ambiguous, apply these definitions:
       "span": "<line number or span identifier>",
       "description": "The agent needed information about <topic> to help, but didn't have access to it — <what happened as a result>",
       "evidence": "Query: '<what was searched for>' | Result: '<what was returned>' | Gap: '<what was needed>'",
+      "evidence_examined": "<the query/retrieval and the gap in returned data>",
+      "evidence_reasoning": "<what information was missing — e.g. 'KB retrieval returned no results but agent proceeded without required product details'>",
+      "evidence_turn_ref": "<relevant turn(s)>",
       "proposedFix": "Add missing context to system prompt or improve retrieval pipeline"
     }
   ]

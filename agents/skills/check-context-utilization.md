@@ -172,6 +172,9 @@ When the severity table above is ambiguous, apply these definitions:
       "span": "<line number of assistant message>",
       "description": "The agent had the correct information ('<data>') but gave a different answer ('<wrong answer>') — it didn't use what it found",
       "evidence": "tool_result: '<value>' | assistant: '<wrong value>'",
+      "evidence_examined": "<the tool result and the assistant message that contradicted it>",
+      "evidence_reasoning": "<what value was ignored or changed — e.g. 'Tool returned price=$49 but assistant quoted $99'>",
+      "evidence_turn_ref": "<turn with tool result → turn with incorrect usage>",
       "proposedFix": "Use exact values from tool results in responses",
       "previous_case_hash": "<optional: case_hash if this matches a previous event>"
     }

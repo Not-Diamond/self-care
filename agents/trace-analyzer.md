@@ -267,6 +267,9 @@ Output the reconciled results:
       "span": "<span or event identifier>",
       "description": "<what went wrong>",
       "evidence": "<trace data supporting the event>",
+      "evidence_examined": "<what specific trace content you examined — the exact excerpt, message, or tool call>",
+      "evidence_reasoning": "<why the examined data constitutes this case type — connect what you saw to the finding>",
+      "evidence_turn_ref": "<where in the trace — e.g. 'turn 5', 'turn 3 → turn 7', 'span gen_ai.chat.turn_12'>",
       "proposedFix": "<recommended fix>"
     }
   ],
@@ -292,7 +295,7 @@ Output the reconciled results:
 }
 ```
 
-**Note:** Keep evidence brief (first 100 chars) to reduce memory usage.
+**Note:** Keep `evidence` brief (first 100 chars) — it is used for case hash computation. The `evidence_examined`, `evidence_reasoning`, and `evidence_turn_ref` fields can be longer and more descriptive.
 ```
 
 ## Agent & Tool Locations

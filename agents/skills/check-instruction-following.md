@@ -158,6 +158,9 @@ When the severity table above is ambiguous, apply these definitions:
       "span": "<line number of violating assistant message>",
       "description": "The agent was told to '<instruction>' but didn't follow it — instead it <what it did>",
       "evidence": "Instruction: '<full instruction>' | Violation: '<violating action>'",
+      "evidence_examined": "<the instruction text and the agent action that violated it>",
+      "evidence_reasoning": "<how the action violates the instruction — e.g. 'Instruction says never share internal URLs but agent included dashboard link'>",
+      "evidence_turn_ref": "<turn with instruction → turn with violation>",
       "proposedFix": "Reinforce instruction with emphasis or examples",
       "previous_case_hash": "<optional: case_hash if this matches a previous event>"
     }

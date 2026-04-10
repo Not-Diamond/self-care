@@ -173,6 +173,9 @@ When the severity table above is ambiguous, apply these definitions:
       "span": "<line number or span identifier>",
       "description": "The agent stopped before finishing — <what was left incomplete and why it matters>",
       "evidence": "Plan: '<stated plan>' | Completed: '<what was done>' | Missing: '<what was not done>'",
+      "evidence_examined": "<the agent's stated plan and the point where execution stopped>",
+      "evidence_reasoning": "<what was left undone — e.g. 'Agent said it would update DB and notify user but stopped after DB update'>",
+      "evidence_turn_ref": "<turn with plan → final turn>",
       "proposedFix": "Add task-completion verification instruction"
     }
   ]

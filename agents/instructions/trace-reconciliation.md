@@ -120,7 +120,7 @@ mkdir -p "$(dirname "$MEMORY_PATH")"
 Use the Write tool to save. Each line is a JSON object:
 
 ```json
-{"case_hash":"abc123","type":"tool-failure","severity":"high","classification":"auto-fixable","span":"line 42","description":"...","evidence":"...","proposedFix":"...","detected_by_skill":"tool-failure","first_detected_at":"2026-02-19T10:00:00Z","last_detected_at":"2026-02-19T12:00:00Z","detection_count":3,"status":"active"}
+{"case_hash":"abc123","type":"tool-failure","severity":"high","classification":"auto-fixable","span":"line 42","description":"...","evidence":"...","evidence_examined":"...","evidence_reasoning":"...","evidence_turn_ref":"...","proposedFix":"...","detected_by_skill":"tool-failure","first_detected_at":"2026-02-19T10:00:00Z","last_detected_at":"2026-02-19T12:00:00Z","detection_count":3,"status":"active"}
 ```
 
 **CRITICAL:** Write the RECONCILED data with updated `detection_count`, not raw skill outputs.
@@ -146,6 +146,9 @@ The final JSON output includes:
       "span": "<line N or span identifier>",
       "description": "...",
       "evidence": "...",
+      "evidence_examined": "<what specific trace content was examined>",
+      "evidence_reasoning": "<why the examined data constitutes this case type>",
+      "evidence_turn_ref": "<where in the trace — e.g. 'turn 5', 'turn 3 → turn 7'>",
       "proposedFix": "..."
     }
   ],

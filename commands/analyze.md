@@ -51,6 +51,15 @@ Extract the trace file path and optional flags from `$ARGUMENTS`:
 
 5. The remaining string is **trace_path** (trimmed, with quotes removed)
 
+6. If the prompt (not `$ARGUMENTS`) contains an `<analysis-config>` block, extract its JSON content:
+   - **analysis_config_json**: The JSON string inside the `<analysis-config>` tags
+   - This block appears after the command line in the prompt body (appended by the server)
+7. Otherwise: **analysis_config_json** = null
+
+8. If the prompt contains an `<agent-context>` block, extract its text content:
+   - **agent_context**: The text inside the `<agent-context>` tags
+9. Otherwise: **agent_context** = null
+
 Store these values for use in later stages.
 
 ### Stage 1: Validation
@@ -142,6 +151,8 @@ Pass to the trace-analyzer agent:
 - **trace_path** (the parsed file path from Stage 0)
 - The detected format from validation
 - **provided_hash** (if not null, tell the analyzer to use this hash instead of computing it)
+- **analysis_config_json** (if not null, include as: "Analysis configuration: `<analysis-config>`{json}`</analysis-config>`")
+- **agent_context** (if not null, include as: "Agent context: `<agent-context>`{text}`</agent-context>`")
 
 The agent will:
 1. Read the trace file
